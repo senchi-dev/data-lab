@@ -402,6 +402,9 @@ HTML = r"""<!doctype html>
   .seg button{ border:0; background:transparent; color:var(--muted); padding:7px 15px;
         font-size:13px; cursor:pointer; }
   .seg button.on{ background:var(--accent); color:#fff; font-weight:600; }
+  .btn{ border:1px solid var(--line); background:var(--panel); color:var(--ink); border-radius:10px;
+        padding:7px 13px; font-size:13px; cursor:pointer; transition:background .12s; }
+  .btn:hover{ background:var(--accent-soft); }
   .card{ background:var(--panel); border:1px solid var(--line); border-radius:14px;
          padding:14px 8px 6px; position:relative; }
   svg{ display:block; width:100%; height:auto; }
@@ -455,6 +458,8 @@ HTML = r"""<!doctype html>
     </div>
     <div class="controls" id="controls">
       <div class="seg" id="gran"></div>
+      <button class="btn" id="exp-series" title="Télécharger cette série en CSV">CSV série</button>
+      <button class="btn" id="exp-matrix" title="Télécharger toutes les séries alignées (matrice de features)">Matrice complète</button>
     </div>
     <div class="card" id="card">
       <svg id="chart" viewBox="0 0 960 440" preserveAspectRatio="none"></svg>
@@ -646,6 +651,35 @@ function onMove(e){
 function onLeave(){ tip.style.opacity=0; if(RENDER) RENDER.hov.innerHTML=""; }
 
 /* ---------- nav ---------- */
+/* ---------- export CSV ---------- */
+function csvEsc(s){ s=String(s); return /[",\n;]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; }
+function download(name, text){
+  const blob=new Blob(["﻿"+text], {type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click();
+  a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+function exportSeries(){
+  const m=DATA[state.id];
+  const keys=[...new Set(m.lines.flatMap(L=>Object.keys(L.points)))].sort();
+  const head=["Date", ...m.lines.map(L=>L.label)];
+  const rows=[head.map(csvEsc).join(",")];
+  for(const k of keys) rows.push([k, ...m.lines.map(L=>L.points[k]??"")].map(csvEsc).join(","));
+  download((state.id||"serie")+".csv", rows.join("\n"));
+}
+function exportMatrix(){
+  const cols=[], keySet=new Set();
+  for(const id in DATA) for(const L of DATA[id].lines){
+    const nm = DATA[id].name + (DATA[id].lines.length>1 ? " ("+L.label+")" : "");
+    cols.push({name:nm, points:L.points});
+    for(const k in L.points) keySet.add(k);
+  }
+  const keys=[...keySet].sort();
+  const rows=[["Date", ...cols.map(c=>c.name)].map(csvEsc).join(",")];
+  for(const k of keys) rows.push([k, ...cols.map(c=>c.points[k]??"")].map(csvEsc).join(","));
+  download("data-lab-matrice.csv", rows.join("\n"));
+}
+
 function buildNav(){
   const nav=document.getElementById("nav"); nav.innerHTML="";
   for(const sec of TAXO){
@@ -726,6 +760,8 @@ document.getElementById("gran").addEventListener("click",e=>{
   document.querySelectorAll("#gran button").forEach(x=>x.classList.toggle("on",x.dataset.g===state.gran));
   draw();
 });
+document.getElementById("exp-series").onclick=exportSeries;
+document.getElementById("exp-matrix").onclick=exportMatrix;
 const chart=document.getElementById("chart");
 chart.addEventListener("pointermove",onMove);
 chart.addEventListener("pointerleave",onLeave);
