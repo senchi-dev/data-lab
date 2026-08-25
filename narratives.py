@@ -6,7 +6,7 @@ Marqueur **gras** supporté ; paragraphes séparés par une ligne vide.
 NARRATIVES = {
     "bce":
         "Le taux directeur de la BCE raconte deux régimes. De mars 2016 à juillet 2022, le refi "
-        "est resté collé à **0 %**, avec un taux de dépôt carrément **négatif** jusqu'à −0,50 % — "
+        "est resté collé à **0 %**, avec un taux de dépôt carrément **négatif** jusqu'à −0,50 %, "
         "l'ère des taux zéro née de la crise de la dette et d'une inflation trop basse. Puis le choc "
         "inflationniste post-Covid et la guerre en Ukraine ont déclenché, à partir de juillet 2022, "
         "la remontée la plus rapide de son histoire. Depuis 2014, c'est le **taux de dépôt** (et non "
@@ -14,17 +14,17 @@ NARRATIVES = {
     "fed":
         "La cible de la Fed matérialise le cycle monétaire américain. Le pic d'avant-crise à 5,25 % "
         "(2006-2007) laisse place à la descente à 0-0,25 % en 2008, un long plancher, puis une brève "
-        "normalisation avortée par le Covid (retour à zéro en 2020). Le resserrement 2022-2023 — le "
-        "plus violent depuis les années 1980 — l'a hissée jusqu'à **5,50 %** pour casser l'inflation. "
+        "normalisation avortée par le Covid (retour à zéro en 2020). Le resserrement 2022-2023, le "
+        "plus violent depuis les années 1980, l'a hissée jusqu'à **5,50 %** pour casser l'inflation. "
         "Ce que fait la Fed déborde sur le Maroc via le change et les flux de capitaux.",
     "infl_us":
         "L'inflation américaine en glissement annuel. Sage autour de 2 % durant la décennie 2010, "
         "elle explose à **~9 % à l'été 2022** (relance budgétaire massive, chocs d'offre post-Covid, "
-        "énergie) — un sommet de 40 ans qui a déclenché le resserrement de la Fed. Son reflux "
+        "énergie), un sommet de 40 ans qui a déclenché le resserrement de la Fed. Son reflux "
         "progressif conditionne le rythme des baisses de taux à venir.",
     "infl_ze":
-        "L'inflation de la zone euro (indice HICP). Longtemps trop basse — sous la cible, d'où les "
-        "taux zéro de la BCE — elle bondit **au-delà de 10 % fin 2022** sous l'effet du choc "
+        "L'inflation de la zone euro (indice HICP). Longtemps trop basse, sous la cible, d'où les "
+        "taux zéro de la BCE, elle bondit **au-delà de 10 % fin 2022** sous l'effet du choc "
         "énergétique lié à la guerre en Ukraine. Sa décrue pilote le calendrier d'assouplissement de "
         "la BCE, et donc indirectement la contrainte de change qui pèse sur BAM.",
     "eurusd":
@@ -40,7 +40,7 @@ NARRATIVES = {
     "food":
         "L'indice FMI des prix alimentaires mondiaux. Le Maroc importe blé, huiles et sucre ; ses "
         "flambées (2008, 2011, et surtout **2022** avec la guerre en Ukraine) alimentent l'inflation "
-        "alimentaire — un poste au poids très lourd dans le panier marocain. D'où le fait que "
+        "alimentaire, un poste au poids très lourd dans le panier marocain. D'où le fait que "
         "l'inflation globale peut s'envoler alors que la sous-jacente reste sage.",
     "gepu":
         "L'indice mondial d'incertitude de politique économique. Il bondit à chaque choc majeur "
@@ -56,7 +56,7 @@ NARRATIVES = {
         "L'inflation marocaine, globale et sous-jacente. Longtemps faible (~1-2 %), la globale "
         "s'envole à **~10 % en 2022-2023**, tirée par l'alimentaire et l'énergie importés, pendant "
         "que la sous-jacente (core) monte moins fort. L'écart entre les deux mesure la part "
-        "temporaire du choc ; c'est la **core** qui dit si l'inflation s'installe — la variable-reine "
+        "temporaire du choc ; c'est la **core** qui dit si l'inflation s'installe, la variable-reine "
         "que BAM cherche à ramener vers 2 %.",
     "pib":
         "La croissance du PIB réel marocain en glissement annuel. Le **« V » du Covid** domine : "
@@ -68,7 +68,7 @@ NARRATIVES = {
         "(filtre HP, fonction de production, semi-structurel). À prendre comme un faisceau, pas comme "
         "une mesure : on se fie à sa direction (surchauffe si positif) et à la convergence des trois "
         "courbes, pas au niveau exact. Les tout derniers points sont incertains (biais de fin "
-        "d'échantillon) — la limite même de l'outil.",
+        "d'échantillon), la limite même de l'outil.",
     "output_gap_q":
         "La version trimestrielle de l'output gap, par simple filtre HP sur le PIB réel. Plus "
         "réactive que le trio annuel, donc plus utile pour anticiper une décision trimestrielle, "
@@ -76,7 +76,7 @@ NARRATIVES = {
         "de nouvelles données arrivent.",
     "ipai":
         "L'indice des prix des actifs immobiliers (base 100 en 2006). Le fait marquant : sur près de "
-        "vingt ans il n'a **quasiment pas bougé en nominal** (~100-114) — donc en termes réels, "
+        "vingt ans il n'a **quasiment pas bougé en nominal** (~100-114), donc en termes réels, "
         "corrigés de l'inflation, les prix ont baissé. Conséquence pour la politique monétaire : le "
         "canal « effet de richesse immobilier » est faible au Maroc.",
 }

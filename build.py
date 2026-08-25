@@ -239,7 +239,7 @@ def build_data():
 
     # --- Sources nationales (fichiers locaux BAM) ---
     monia = load_monia()
-    data["monia"] = {"name": "MONIA — interbancaire j/j", "section": "Sources nationales",
+    data["monia"] = {"name": "MONIA (interbancaire j/j)", "section": "Sources nationales",
                      "group": "Marché monétaire", "unit": "%", "decimals": 2, "agg": "avg", "freq": "M",
                      "lines": [{"label": "MONIA", "color": BLEU, "points": monia}]}
     print(f"{'MONIA (interbancaire)':<30} {'MONIA':<12} {len(monia)} mois  (fichier BAM, avg)")
@@ -319,7 +319,7 @@ TAXONOMY = [
          "source": "ANCFCC (Conservation Foncière) · Bank Al-Maghrib", "ids": ["ipai"]},
         {"name": "Comptes nationaux (croissance, PIB, investissement, consommation)",
          "source": "HCP · Direction de la comptabilité nationale (API BDS, I4276)", "ids": ["pib"]},
-        {"name": "Output gap (construit — 3 méthodes de BAM)",
+        {"name": "Output gap (construit, 3 méthodes de BAM)",
          "source": "Construit : filtre HP + fonction de production + semi-structurel · données FMI/WEO & HCP · méthode Chafik/BAM 2017", "ids": ["output_gap", "output_gap_q"]},
         {"name": "Marché du travail (emploi, chômage, taux d'activité)",
          "source": "HCP", "ids": []},
@@ -372,16 +372,20 @@ HTML = r"""<!doctype html>
   .chev{ transition:transform .15s; font-size:10px; color:var(--muted); }
   .section.collapsed .chev{ transform:rotate(-90deg); }
   .section.collapsed .section-body{ display:none; }
-  .grp{ font-size:11.5px; font-weight:600; color:var(--ink); margin:12px 6px 2px; line-height:1.35; }
-  .src{ font-size:10px; color:var(--muted); margin:0 6px 6px; line-height:1.4; }
-  .item{ display:block; width:100%; text-align:left; border:0; background:transparent;
-         color:var(--ink); padding:8px 11px; border-radius:9px; font-size:13px;
-         cursor:pointer; transition:background .12s; line-height:1.35; }
+  .navcat{ font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
+         color:var(--muted); margin:14px 8px 4px; }
+  .navcat.soon{ margin-top:16px; }
+  .item{ display:flex; align-items:flex-start; gap:9px; width:100%; text-align:left; border:0;
+         background:transparent; color:var(--ink); padding:7px 11px; border-radius:9px;
+         font-size:13px; cursor:pointer; transition:background .12s; line-height:1.4; }
   .item:hover{ background:var(--accent-soft); }
   .item.active{ background:var(--accent); color:#fff; font-weight:600; }
   .item.pending{ color:var(--muted); }
-  .chip{ font-size:9px; text-transform:uppercase; letter-spacing:.05em; border:1px solid var(--line);
-         color:var(--muted); border-radius:20px; padding:1px 7px; margin-left:6px; vertical-align:middle; }
+  .dotstat{ width:7px; height:7px; border-radius:50%; flex:0 0 auto; margin-top:6px; }
+  .dotstat.on{ background:var(--accent); }
+  .dotstat.off{ border:1.5px solid var(--muted); }
+  .item.active .dotstat.on{ background:#fff; }
+  .ilab{ flex:1; }
   #source{ color:var(--muted); font-size:11.5px; margin-top:5px; }
   #placeholder{ display:none; background:var(--panel); border:1px dashed var(--line);
         border-radius:14px; padding:40px 28px; text-align:center; color:var(--muted); margin-top:12px; }
@@ -602,7 +606,7 @@ function renderAnalysis(){
   const pos = st.last.value>=st.mean ? "au-dessus" : "en dessous";
   const freqLab = ({M:"mensuels",Q:"trimestriels",A:"annuels"})[m.freq]||"points";
   const auto = `Lecture actuelle : dernier point à <b>${fmtd(st.last.value)}</b> (${labelOf(st.last.key)}), `
-    + `${pos} de sa moyenne de ${fmtd(st.mean)} ; amplitude ${fmtd(st.min)}–${fmtd(st.max)} sur ${st.n} points ${freqLab}.`;
+    + `${pos} de sa moyenne de ${fmtd(st.mean)} ; amplitude ${fmtd(st.min)} à ${fmtd(st.max)} sur ${st.n} points ${freqLab}.`;
   const prose = m.narrative
     ? `<div class="prose">`+m.narrative.split(/\n\s*\n/).map(p=>`<p>${mdBold(p)}</p>`).join("")+`</div>`
     : "";
@@ -650,24 +654,27 @@ function buildNav(){
     hd.innerHTML=`<span class="chev">▼</span><span>${sec.section}</span>`;
     hd.onclick=()=>wrap.classList.toggle("collapsed");
     const body=document.createElement("div"); body.className="section-body";
-    for(const topic of sec.topics){
-      if(topic.ids && topic.ids.length){
-        // rubrique avec donnees : libelle + source, puis une entree cliquable par serie
-        const gl=document.createElement("div"); gl.className="grp"; gl.textContent=topic.name; body.appendChild(gl);
-        const sr=document.createElement("div"); sr.className="src"; sr.textContent=topic.source; body.appendChild(sr);
-        for(const id of topic.ids){
-          const b=document.createElement("button"); b.className="item"; b.dataset.id=id;
-          b.textContent=DATA[id].name;
-          b.onclick=()=>selectSeries(id, topic.source);
-          body.appendChild(b);
-        }
-      } else {
-        // rubrique a collecter : entree grisee + source
+
+    // On separe les rubriques Disponibles (avec donnees) des rubriques A venir.
+    const avail=[], soon=[];
+    for(const topic of sec.topics){ (topic.ids && topic.ids.length ? avail : soon).push(topic); }
+
+    if(avail.length){
+      const h=document.createElement("div"); h.className="navcat"; h.textContent="Disponibles"; body.appendChild(h);
+      for(const topic of avail) for(const id of topic.ids){
+        const b=document.createElement("button"); b.className="item"; b.dataset.id=id;
+        b.innerHTML=`<span class="dotstat on"></span><span class="ilab">${DATA[id].name}</span>`;
+        b.onclick=()=>selectSeries(id, topic.source);
+        body.appendChild(b);
+      }
+    }
+    if(soon.length){
+      const h=document.createElement("div"); h.className="navcat soon"; h.textContent="À venir"; body.appendChild(h);
+      for(const topic of soon){
         const b=document.createElement("button"); b.className="item pending"; b.dataset.ph=topic.name;
-        b.innerHTML=`${topic.name}<span class="chip">à venir</span>`;
+        b.innerHTML=`<span class="dotstat off"></span><span class="ilab">${topic.name}</span>`;
         b.onclick=()=>selectPlaceholder(topic);
         body.appendChild(b);
-        const sr=document.createElement("div"); sr.className="src"; sr.textContent=topic.source; body.appendChild(sr);
       }
     }
     wrap.appendChild(hd); wrap.appendChild(body); nav.appendChild(wrap);
