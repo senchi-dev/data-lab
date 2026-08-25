@@ -1,21 +1,29 @@
-name: Refresh data
+name: Build & deploy
 
-# Reconstruit le site chaque jour (données FRED + HCP + IMF fraîches) et le committe.
-# Vercel, connecté au dépôt, redéploie automatiquement au push.
+# Reconstruit le site (données FRED + HCP + IMF fraîches), le committe, et le déploie sur GitHub Pages.
 on:
   schedule:
     - cron: "30 6 * * *"      # tous les jours ~06:30 UTC (≈ 07:30 au Maroc)
-  workflow_dispatch: {}        # bouton "Run" manuel
+  workflow_dispatch: {}
   push:
     branches: [ main ]
-    paths-ignore: [ "public/**" ]   # évite de se re-déclencher sur son propre commit
+    paths-ignore: [ "public/**" ]
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
-  build:
+  build-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -31,9 +39,10 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add public
-          if git diff --cached --quiet; then
-            echo "Aucun changement de données aujourd'hui."
-          else
-            git commit -m "chore: refresh data [skip ci]"
-            git push
-          fi
+          git diff --cached --quiet || (git commit -m "chore: refresh data [skip ci]" && git push)
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - id: deploy
+        uses: actions/deploy-pages@v4
