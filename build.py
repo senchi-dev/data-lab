@@ -403,7 +403,8 @@ HTML = r"""<!doctype html>
         font-size:13px; cursor:pointer; }
   .seg button.on{ background:var(--accent); color:#fff; font-weight:600; }
   .btn{ border:1px solid var(--line); background:var(--panel); color:var(--ink); border-radius:10px;
-        padding:7px 13px; font-size:13px; cursor:pointer; transition:background .12s; }
+        padding:7px 13px; font-size:13px; cursor:pointer; transition:background .12s;
+        text-decoration:none; display:inline-flex; align-items:center; }
   .btn:hover{ background:var(--accent-soft); }
   .card{ background:var(--panel); border:1px solid var(--line); border-radius:14px;
          padding:14px 8px 6px; position:relative; }
@@ -459,7 +460,7 @@ HTML = r"""<!doctype html>
     <div class="controls" id="controls">
       <div class="seg" id="gran"></div>
       <button class="btn" id="exp-series" title="Télécharger cette série en CSV">CSV série</button>
-      <button class="btn" id="exp-matrix" title="Télécharger toutes les séries alignées (matrice de features)">Matrice complète</button>
+      <a class="btn" id="exp-matrix" href="features.csv" download="data-lab-features.csv" title="Télécharger la matrice de features alignée au mensuel">Matrice (features)</a>
     </div>
     <div class="card" id="card">
       <svg id="chart" viewBox="0 0 960 440" preserveAspectRatio="none"></svg>
@@ -667,19 +668,6 @@ function exportSeries(){
   for(const k of keys) rows.push([k, ...m.lines.map(L=>L.points[k]??"")].map(csvEsc).join(","));
   download((state.id||"serie")+".csv", rows.join("\n"));
 }
-function exportMatrix(){
-  const cols=[], keySet=new Set();
-  for(const id in DATA) for(const L of DATA[id].lines){
-    const nm = DATA[id].name + (DATA[id].lines.length>1 ? " ("+L.label+")" : "");
-    cols.push({name:nm, points:L.points});
-    for(const k in L.points) keySet.add(k);
-  }
-  const keys=[...keySet].sort();
-  const rows=[["Date", ...cols.map(c=>c.name)].map(csvEsc).join(",")];
-  for(const k of keys) rows.push([k, ...cols.map(c=>c.points[k]??"")].map(csvEsc).join(","));
-  download("data-lab-matrice.csv", rows.join("\n"));
-}
-
 function buildNav(){
   const nav=document.getElementById("nav"); nav.innerHTML="";
   for(const sec of TAXO){
@@ -761,7 +749,6 @@ document.getElementById("gran").addEventListener("click",e=>{
   draw();
 });
 document.getElementById("exp-series").onclick=exportSeries;
-document.getElementById("exp-matrix").onclick=exportMatrix;
 const chart=document.getElementById("chart");
 chart.addEventListener("pointermove",onMove);
 chart.addEventListener("pointerleave",onLeave);
@@ -775,6 +762,46 @@ buildNav(); syncNav(); refresh();
 """
 
 
+def write_features(data):
+    """Matrice de features alignee au mensuel (forward-fill des series moins frequentes) -> public/features.csv.
+    Note : simple forward-fill (valeur connue des la periode) ; l'ajustement point-in-time
+    (decalage par date de publication) viendra plus tard."""
+    import csv as _csv
+
+    def idx(ym):
+        y, m = ym.split("-"); return int(y) * 12 + int(m) - 1
+
+    cols = []  # (nom_colonne, points)
+    for d in data.values():
+        for L in d["lines"]:
+            nm = d["name"] + (f" ({L['label']})" if len(d["lines"]) > 1 else "")
+            cols.append((nm, L["points"]))
+
+    allk = [k for _, pts in cols for k in pts]
+    lo, hi = min(map(idx, allk)), max(map(idx, allk))
+    months = [f"{(lo + i)//12:04d}-{((lo + i) % 12) + 1:02d}" for i in range(hi - lo + 1)]
+
+    aligned = {}
+    for nm, pts in cols:
+        keys = sorted(pts, key=idx)
+        first, last = idx(keys[0]), idx(keys[-1])
+        col, ptr, cur = [], 0, None
+        for i in range(lo, hi + 1):
+            if i < first or i > last:
+                col.append(""); continue
+            while ptr < len(keys) and idx(keys[ptr]) <= i:
+                cur = pts[keys[ptr]]; ptr += 1
+            col.append(cur if cur is not None else "")
+        aligned[nm] = col
+
+    with open(DEST / "features.csv", "w", newline="", encoding="utf-8") as f:
+        w = _csv.writer(f)
+        w.writerow(["Date"] + [nm for nm, _ in cols])
+        for i, ym in enumerate(months):
+            w.writerow([ym] + [aligned[nm][i] for nm, _ in cols])
+    print(f"features.csv : {len(months)} mois x {len(cols)} colonnes")
+
+
 def main():
     DEST.mkdir(parents=True, exist_ok=True)
     data = build_data()
@@ -782,6 +809,7 @@ def main():
             .replace("__DATA__", json.dumps(data, ensure_ascii=False))
             .replace("__TAXO__", json.dumps(TAXONOMY, ensure_ascii=False)))
     FICHIER.write_text(html, encoding="utf-8")
+    write_features(data)
     print(f"\nOK -> {FICHIER}")
 
 
