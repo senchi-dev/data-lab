@@ -223,7 +223,37 @@ NOTES = {
     "output_gap": "Écart entre PIB observé et potentiel, estimé par les 3 méthodes de BAM (HP, fonction de production, semi-structurel). Estimation, pas mesure : fiez-vous au signe et à la direction, pas au niveau exact ; les derniers points sont incertains (biais de fin d'échantillon).",
     "output_gap_q": "Output gap trimestriel par filtre HP (λ=1600) sur le PIB réel. Plus réactif que la version annuelle, mais fortement révisé sur les tout derniers trimestres.",
     "ipai": "Indice des prix des actifs immobiliers (base 100 = T1 2006). Global vs résidentiel. Quasi plat sur 20 ans → prix réels en baisse.",
+    "m3": "Agrégats monétaires M1/M2/M3 en milliards de dirhams (annuel). M3 (masse monétaire large) est le plus suivi ; une croissance excessive précède l'inflation à moyen terme.",
+    "capi": "Capitalisation boursière totale de la Bourse de Casablanca (annuel, milliards DH). Valeur du marché actions et canal d'effet de richesse.",
 }
+
+
+def _hcp(code):
+    return requests.get(f"https://bds.hcp.ma/api/v1/indicators/{code}", timeout=20).json()
+
+
+def _hcp_annual_series(j, mid, div=1.0, dec=1):
+    """Extrait une modalite d'un indicateur HCP annuel -> {'AAAA-07': valeur} (mid-year)."""
+    out = {}
+    for p in j["periods"]:                       # p = 'AAAA'
+        cell = j["data"].get(f"{mid}_{p}")
+        if cell and cell["value"] not in (None, ""):
+            v = float(str(cell["value"]).replace("\xa0", "").replace(",", ".")) / div
+            out[f"{p}-07"] = round(v, dec)
+    return out
+
+
+def load_hcp_aggregates():
+    """Agregats monetaires M1/M2/M3 (HCP I1450, source BAM), annuel, en milliards de DH."""
+    j = _hcp("I1450")
+    return (_hcp_annual_series(j, 1432, 1000, 0),   # M1
+            _hcp_annual_series(j, 1434, 1000, 0),   # M2
+            _hcp_annual_series(j, 1436, 1000, 0))   # M3
+
+
+def load_hcp_market_cap():
+    """Capitalisation boursiere totale (HCP I1887, Bourse de Casablanca), annuel, milliards de DH."""
+    return _hcp_annual_series(_hcp("I1887"), 1496, 1000, 0)
 
 
 def build_data():
@@ -278,6 +308,20 @@ def build_data():
                             "lines": [{"label": "HP trimestriel (λ=1600)", "color": BLEU, "points": gapq}]}
     print(f"{'Output gap trimestriel':<30} {'HP':<12} {len(gapq)} trim.  (I4276, lambda=1600)")
 
+    m1, m2, m3 = load_hcp_aggregates()
+    data["m3"] = {"name": "Agrégats monétaires (M1, M2, M3)", "section": "Données monétaires et financières nationales",
+                  "group": "Statistiques monétaires", "unit": "milliards DH", "decimals": 0, "agg": "avg", "freq": "A",
+                  "lines": [{"label": "M3", "color": VERT, "points": m3},
+                            {"label": "M2", "color": ORANGE, "points": m2},
+                            {"label": "M1", "color": BLEU, "points": m1}]}
+    print(f"{'Agrégats M1/M2/M3 (HCP)':<30} {'3 series':<12} {len(m3)} ans  (API HCP I1450)")
+
+    capi = load_hcp_market_cap()
+    data["capi"] = {"name": "Capitalisation boursière (total)", "section": "Données monétaires et financières nationales",
+                    "group": "Marchés des capitaux", "unit": "milliards DH", "decimals": 0, "agg": "avg", "freq": "A",
+                    "lines": [{"label": "Capitalisation", "color": BLEU, "points": capi}]}
+    print(f"{'Capitalisation boursière (HCP)':<30} {'total':<12} {len(capi)} ans  (API HCP I1887)")
+
     for k in data:
         data[k]["note"] = NOTES.get(k, "Survole la courbe pour lire la date et la valeur exacte.")
         # Stats descriptives calculees sur la courbe la plus longue (frequence native).
@@ -300,11 +344,11 @@ TAXONOMY = [
     ]},
     {"section": "Données monétaires et financières nationales", "topics": [
         {"name": "Statistiques monétaires (agrégats, crédit, dépôts)",
-         "source": "Reportings du système bancaire à BAM", "ids": []},
+         "source": "Bank Al-Maghrib (via API HCP, I1450)", "ids": ["m3"]},
         {"name": "Marchés monétaires et de change (taux, TMP, change, adjudications)",
          "source": "BAM", "ids": ["monia"]},
         {"name": "Marchés des capitaux",
-         "source": "AMMC · BAM · Maroclear", "ids": []},
+         "source": "Bourse de Casablanca (via API HCP, I1887)", "ids": ["capi"]},
         {"name": "Taux débiteurs et production du crédit",
          "source": "Reporting trimestriel du système bancaire à BAM", "ids": []},
         {"name": "Conditions d'octroi du crédit bancaire",

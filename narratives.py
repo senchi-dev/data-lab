@@ -79,4 +79,15 @@ NARRATIVES = {
         "vingt ans il n'a **quasiment pas bougé en nominal** (~100-114), donc en termes réels, "
         "corrigés de l'inflation, les prix ont baissé. Conséquence pour la politique monétaire : le "
         "canal « effet de richesse immobilier » est faible au Maroc.",
+    "m3":
+        "Les agrégats monétaires mesurent la monnaie en circulation. **M3** (masse monétaire "
+        "large) est passé d'environ 700 milliards de dirhams au milieu des années 2000 à plus de "
+        "**2 000 milliards** aujourd'hui, une progression continue. En théorie monétaire, une "
+        "croissance excessive de M3 précède l'inflation à moyen terme, ce que BAM surveille. Donnée "
+        "annuelle, donc lente : un signal de fond, pas un timing.",
+    "capi":
+        "La capitalisation boursière totale de la Bourse de Casablanca, c'est la valeur de marché "
+        "de toutes les actions cotées. Elle reflète l'appétit pour le risque et alimente un canal "
+        "d'effet de richesse. Le marché marocain reste **étroit et concentré** (banques, télécoms "
+        "et immobilier dominent), donc ce canal joue moins qu'ailleurs. Donnée annuelle.",
 }
