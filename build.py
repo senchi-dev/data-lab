@@ -396,7 +396,12 @@ HTML = r"""<!doctype html>
   .head{ display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; }
   .head h2{ margin:0; font-size:21px; }
   .unit{ color:var(--muted); font-size:13px; }
-  .controls{ display:flex; gap:6px; margin:18px 0 10px; }
+  .controls{ display:flex; gap:6px; margin:18px 0 10px; flex-wrap:wrap; align-items:center; }
+  #cmpbar{ margin:2px 0 14px; }
+  .ctl-lab{ font-size:11.5px; color:var(--muted); margin-left:6px; }
+  .sel{ border:1px solid var(--line); background:var(--panel); color:var(--ink); border-radius:10px;
+        padding:6px 10px; font-size:13px; cursor:pointer; max-width:220px; }
+  .corr{ font-size:12.5px; color:var(--accent); font-weight:600; margin-left:4px; }
   .seg{ display:inline-flex; background:var(--panel); border:1px solid var(--line);
         border-radius:10px; overflow:hidden; }
   .seg button{ border:0; background:transparent; color:var(--muted); padding:7px 15px;
@@ -462,6 +467,22 @@ HTML = r"""<!doctype html>
       <button class="btn" id="exp-series" title="Télécharger cette série en CSV">CSV série</button>
       <a class="btn" id="exp-matrix" href="features.csv" download="data-lab-features.csv" title="Télécharger la matrice de features alignée au mensuel">Matrice (features)</a>
     </div>
+    <div class="controls" id="cmpbar">
+      <span class="ctl-lab">Transformer</span>
+      <div class="seg" id="tf">
+        <button data-t="level" class="on">Niveau</button>
+        <button data-t="yoy">Δ 1 an</button>
+        <button data-t="base100">Base 100</button>
+        <button data-t="zscore">Z-score</button>
+      </div>
+      <span class="ctl-lab">Comparer</span>
+      <select id="cmp" class="sel"></select>
+      <div class="seg" id="cmpmode" style="display:none">
+        <button data-m="overlay" class="on">Superposer</button>
+        <button data-m="spread">Écart</button>
+      </div>
+      <span id="corr" class="corr"></span>
+    </div>
     <div class="card" id="card">
       <svg id="chart" viewBox="0 0 960 440" preserveAspectRatio="none"></svg>
       <div class="legend" id="legend"></div>
@@ -481,7 +502,8 @@ const DATA = __DATA__;
 const TAXO = __TAXO__;
 const NS = "http://www.w3.org/2000/svg";
 const M = {l:58, r:22, t:22, b:34}, W=960, H=440;
-const state = { id:Object.keys(DATA)[0], gran:"M", source:"" };
+const state = { id:Object.keys(DATA)[0], gran:"M", source:"", transform:"level", compareId:null, compareMode:"overlay" };
+const CMP_COLOR = "#8b5cf6";
 
 /* ---------- agregation ---------- */
 const MONTHS = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
@@ -520,9 +542,59 @@ function fmt(v){ const d=DATA[state.id].decimals; return v.toLocaleString("fr-FR
 
 /* ---------- rendu ---------- */
 let RENDER = null;
+/* ---------- transformations & comparaison ---------- */
+function applyTransform(pts, mode){
+  if(!pts.length || mode==="level") return pts;
+  if(mode==="yoy"){
+    const k=({M:12,Q:4,Y:1})[state.gran]||12; const out=[];
+    for(let i=k;i<pts.length;i++) out.push({t:pts[i].t, v:pts[i].v-pts[i-k].v, label:pts[i].label});
+    return out;
+  }
+  if(mode==="base100"){
+    const b=pts[0].v; if(!b) return pts; return pts.map(p=>({t:p.t, v:p.v/b*100, label:p.label}));
+  }
+  if(mode==="zscore"){
+    const vs=pts.map(p=>p.v), m=vs.reduce((a,b)=>a+b,0)/vs.length;
+    const sd=Math.sqrt(vs.reduce((a,b)=>a+(b-m)*(b-m),0)/vs.length)||1;
+    return pts.map(p=>({t:p.t, v:(p.v-m)/sd, label:p.label}));
+  }
+  return pts;
+}
+function cmpMainPts(cm){
+  const L=cm.lines.reduce((a,b)=>Object.keys(b.points).length>Object.keys(a.points).length?b:a);
+  return applyTransform(aggregate(L.points, state.gran, cm.agg), state.transform);
+}
+function alignPairs(a,b){ const mb=new Map(b.map(p=>[p.t,p.v])); const o=[];
+  for(const p of a) if(mb.has(p.t)) o.push([p.v, mb.get(p.t)]); return o; }
+function spreadPts(a,b){ const mb=new Map(b.map(p=>[p.t,p.v])); const o=[];
+  for(const p of a) if(mb.has(p.t)) o.push({t:p.t, v:p.v-mb.get(p.t), label:p.label}); return o; }
+function pearson(pairs){ const n=pairs.length; if(n<3) return null;
+  let sx=0,sy=0,sxx=0,syy=0,sxy=0;
+  for(const [x,y] of pairs){ sx+=x; sy+=y; sxx+=x*x; syy+=y*y; sxy+=x*y; }
+  const cov=sxy-sx*sy/n, vx=sxx-sx*sx/n, vy=syy-sy*sy/n, d=Math.sqrt(vx*vy);
+  return d ? cov/d : null; }
+function renderCorr(r){
+  const el=document.getElementById("corr");
+  el.textContent = (r==null) ? "" : "corrélation r = " + r.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
 function draw(){
   const meta=DATA[state.id];
-  const series=meta.lines.map(L=>({label:L.label,color:L.color,pts:aggregate(L.points,state.gran,meta.agg)}));
+  let series=meta.lines.map(L=>({label:L.label,color:L.color,pts:applyTransform(aggregate(L.points,state.gran,meta.agg),state.transform)}));
+  // Comparaison a une 2e serie
+  let corr=null;
+  const cmpId=(state.compareId && state.compareId!==state.id && DATA[state.compareId]) ? state.compareId : null;
+  if(cmpId){
+    const cm=DATA[cmpId], cmPts=cmpMainPts(cm);
+    const prMain=series.reduce((a,b)=>b.pts.length>a.pts.length?b:a);
+    corr=pearson(alignPairs(prMain.pts, cmPts));
+    if(state.compareMode==="spread"){
+      series=[{label:"Écart (" + meta.name + " moins " + cm.name + ")", color:CMP_COLOR, pts:spreadPts(prMain.pts, cmPts)}];
+    } else {
+      series=series.concat([{label:cm.name, color:CMP_COLOR, pts:cmPts, dashed:true}]);
+    }
+  }
+  renderCorr(corr);
   const allV=series.flatMap(s=>s.pts.map(p=>p.v));
   const allT=series.flatMap(s=>s.pts.map(p=>p.t));
   let ymin=Math.min(...allV), ymax=Math.max(...allV);
@@ -558,7 +630,9 @@ function draw(){
   // lines
   for(const s of series){
     const d=s.pts.map((p,i)=>(i?"L":"M")+X(p.t).toFixed(1)+" "+Y(p.v).toFixed(1)).join(" ");
-    add("path",{d,fill:"none",stroke:s.color,"stroke-width":2,"stroke-linejoin":"round","stroke-linecap":"round"});
+    const at={d,fill:"none",stroke:s.color,"stroke-width":2,"stroke-linejoin":"round","stroke-linecap":"round"};
+    if(s.dashed) at["stroke-dasharray"]="5 4";
+    add("path",at);
   }
   // hover layer
   const hov=add("g",{id:"hov"});
@@ -706,7 +780,7 @@ function syncNav(){
   document.querySelectorAll(".item").forEach(b=>b.classList.toggle("active", b.dataset.id===state.id && state.id!=null));
 }
 function showChartUI(on){
-  for(const el of ["controls","card","stats-hd","stats","statstable","ana-hd","analysis","foot"]) document.getElementById(el).style.display = on?"":"none";
+  for(const el of ["controls","cmpbar","card","stats-hd","stats","statstable","ana-hd","analysis","foot"]) document.getElementById(el).style.display = on?"":"none";
   document.getElementById("placeholder").style.display = on?"none":"block";
 }
 function selectSeries(id, source){ state.id=id; state.source=source; syncNav(); refresh(); }
@@ -749,6 +823,29 @@ document.getElementById("gran").addEventListener("click",e=>{
   draw();
 });
 document.getElementById("exp-series").onclick=exportSeries;
+// Menu Comparer : peuplé avec toutes les séries disponibles
+(function(){
+  let html='<option value="">Comparer à…</option>';
+  for(const id in DATA) html+=`<option value="${id}">${DATA[id].name}</option>`;
+  document.getElementById("cmp").innerHTML=html;
+})();
+document.getElementById("tf").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-t]"); if(!b) return;
+  state.transform=b.dataset.t;
+  document.querySelectorAll("#tf button").forEach(x=>x.classList.toggle("on",x.dataset.t===state.transform));
+  draw();
+});
+document.getElementById("cmp").addEventListener("change",e=>{
+  state.compareId=e.target.value||null;
+  document.getElementById("cmpmode").style.display = state.compareId ? "" : "none";
+  draw();
+});
+document.getElementById("cmpmode").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-m]"); if(!b) return;
+  state.compareMode=b.dataset.m;
+  document.querySelectorAll("#cmpmode button").forEach(x=>x.classList.toggle("on",x.dataset.m===state.compareMode));
+  draw();
+});
 const chart=document.getElementById("chart");
 chart.addEventListener("pointermove",onMove);
 chart.addEventListener("pointerleave",onLeave);
