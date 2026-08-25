@@ -346,7 +346,7 @@ HTML = r"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>World Data — Dashboard</title>
+<title>Data Lab</title>
 <style>
   :root{
     --bg:#f6f7f9; --panel:#ffffff; --ink:#1a1d21; --muted:#6b7280;
@@ -432,7 +432,7 @@ HTML = r"""<!doctype html>
 <body>
 <div class="app">
   <aside>
-    <h1>World Data</h1>
+    <h1>Data Lab</h1>
     <p class="sub">Dispositif informationnel de Bank Al-Maghrib · données pour anticiper les décisions de taux</p>
     <nav id="nav"></nav>
   </aside>
