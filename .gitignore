@@ -1,0 +1,14 @@
+# Secrets — NE JAMAIS committer les clés API
+config_api_fred.py
+config_api_bam.py
+.env
+*.key
+
+# Python
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
