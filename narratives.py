@@ -459,4 +459,20 @@ NARRATIVES = {
         "**Pour BAM.** Ces soldes offrent une lecture mensuelle et sectorielle de l'activité et des "
         "pressions de prix, en avance sur les statistiques officielles. Le solde des prix, en "
         "particulier, est un indicateur avancé précieux pour la décision sur les taux.",
+    "ipp":
+        "L'indice des prix à la production industrielle, énergétique et minière (IPP), publié par le "
+        "HCP en base 100 = 2010. Il mesure les **prix de sortie d'usine**, c'est-à-dire ce que les "
+        "producteurs facturent, par grand secteur (manufacturières, électricité, extractives, eau).\n\n"
+        "**Pourquoi c'est utile pour BAM.** L'IPP est un **signal d'inflation en amont** : quand les "
+        "coûts et les prix producteurs montent, ils se répercutent souvent quelques mois plus tard sur "
+        "les prix à la consommation (l'IPC que BAM cible). C'est donc un indicateur avancé du canal des "
+        "coûts.\n\n"
+        "**Ce que montre la série.** Les prix manufacturiers progressent d'environ 71 (fin des années "
+        "1990) à **110 en 2021**, l'électricité grimpe plus vite (jusqu'à 122), et les secteurs "
+        "extractifs et eau sont plus heurtés. Les branches liées à l'énergie (raffinage, chimie) sont "
+        "de loin les plus volatiles, calquées sur les cours mondiaux du pétrole.\n\n"
+        "**Limites à connaître.** Donnée **annuelle** et sur une **base ancienne (2010)**, qui "
+        "**s'arrête en 2021** dans cette version de l'indicateur HCP. Elle sert donc de contexte "
+        "structurel de longue période, pas de signal fin et récent. Pour un suivi mensuel et à jour, "
+        "l'IPP en base 2018 (jusqu'en 2026) serait la version à privilégier.",
 }

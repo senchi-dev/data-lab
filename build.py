@@ -294,6 +294,21 @@ def _hcp_num(v):
     return float(str(v).replace("\xa0", "").replace(" ", "").replace(",", "."))
 
 
+def load_ipp():
+    """Indice des prix a la production industrielle (IPP, HCP I1418, base 2010), annuel 1998-2021.
+    4 secteurs agreges. Cle 'YYYY-07' (mi-annee). Renvoie {label: {cle: valeur}}."""
+    j = requests.get("https://bds.hcp.ma/api/v1/indicators/I1418", timeout=25).json()
+    secteurs = {"Manufacturières": "758", "Électricité": "759",
+                "Extractives": "757", "Eau": "760"}
+    out = {lab: {} for lab in secteurs}
+    for p in j["periods"]:                       # 'YYYY'
+        for lab, mid in secteurs.items():
+            c = j["data"].get(f"{mid}_{p}")
+            if c and c["value"] not in (None, ""):
+                out[lab][f"{p}-07"] = round(_hcp_num(c["value"]), 1)
+    return out
+
+
 def load_marche_travail():
     """Taux de chomage (I4249) et taux d'activite (I4250), agregat National/Ensemble, trimestriel 2006-2025 (HCP, ENE).
     Cle 'YYYY-MM' au mois median du trimestre."""
@@ -432,6 +447,7 @@ NOTES = {
     "cereales": "Production céréalière nationale par campagne agricole (Ministère de l'Agriculture via API HCP), en millions de quintaux. Total et par type (blé tendre, blé dur, orge). Extrêmement volatile selon la pluviométrie : une mauvaise campagne fait plonger la croissance du PIB agricole, donc du PIB global. La composante hors céréalière n'est pas publiée séparément.",
     "tuc": "Taux d'utilisation des capacités de production dans l'industrie (enquête mensuelle de conjoncture BAM), mensuel. Part des capacités effectivement utilisées : plus il est haut, plus l'appareil productif tourne à plein. Baromètre d'activité réelle très suivi, proxy des tensions sur l'offre et de l'écart de production.",
     "conj_ind": "Soldes d'opinion de l'enquête mensuelle de conjoncture BAM (industrie, branche Global). Un solde = % d'entreprises signalant une hausse moins % signalant une baisse : positif = expansion, négatif = contraction. Production, ventes et carnets de commandes mesurent l'activité ; les prix des produits finis sont un signal avancé d'inflation côté offre.",
+    "ipp": "Indice des prix à la production industrielle, énergétique et minière (IPP, HCP, base 100 = 2010), annuel, par secteur. Mesure le prix de sortie d'usine, un signal d'inflation en amont (les prix producteurs précèdent souvent les prix à la consommation). Série disponible de 1998 à 2021 sur cette base ; pour un suivi frais et mensuel, voir l'IPP base 2018 (mensuel, jusqu'en 2026) non intégré ici.",
 }
 
 
@@ -590,6 +606,15 @@ def build_data():
                                   {"label": "Prix des produits finis", "color": ROUGE, "points": soldes["prix"]}]}
     print(f"{'Conjoncture industrielle (EMC)':<30} {'4 series':<12} {len(soldes['prod'])} mois  (fichier BAM EMC, soldes)")
 
+    ipp = load_ipp()
+    data["ipp"] = {"name": "Prix à la production industrielle (IPP)", "section": "Données économiques nationales",
+                   "group": "Prix", "unit": "indice (base 100 = 2010)", "decimals": 1, "agg": "avg", "freq": "A",
+                   "lines": [{"label": "Manufacturières", "color": BLEU, "points": ipp["Manufacturières"]},
+                             {"label": "Électricité", "color": ORANGE, "points": ipp["Électricité"]},
+                             {"label": "Extractives", "color": VERT, "points": ipp["Extractives"]},
+                             {"label": "Eau", "color": ROUGE, "points": ipp["Eau"]}]}
+    print(f"{'IPP prix production (HCP)':<30} {'4 series':<12} {len(ipp['Manufacturières'])} ans  (API HCP I1418, base 2010)")
+
     for k in data:
         data[k]["note"] = NOTES.get(k, "Survole la courbe pour lire la date et la valeur exacte.")
         # Stats descriptives calculees sur la courbe la plus longue (frequence native).
@@ -640,7 +665,7 @@ TAXONOMY = [
         {"name": "Marché du travail (emploi, chômage, taux d'activité)",
          "source": "HCP · Enquête Nationale sur l'Emploi (API BDS, I4249/I4250)", "ids": ["travail"]},
         {"name": "Prix à la consommation, inflation globale, prix à la production",
-         "source": "HCP (inflation globale) · Bank Al-Maghrib (inflation sous-jacente)", "ids": ["inflation"]},
+         "source": "HCP (inflation globale, IPP) · Bank Al-Maghrib (inflation sous-jacente)", "ids": ["inflation", "ipp"]},
         {"name": "Production industrielle, énergétique et minière",
          "source": "HCP", "ids": []},
         {"name": "Finances publiques et loi de finances",
