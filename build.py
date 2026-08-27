@@ -264,6 +264,58 @@ def load_icm():
     return out
 
 
+def _hcp_num(v):
+    return float(str(v).replace("\xa0", "").replace(" ", "").replace(",", "."))
+
+
+def load_marche_travail():
+    """Taux de chomage (I4249) et taux d'activite (I4250), agregat National/Ensemble, trimestriel 2006-2025 (HCP, ENE).
+    Cle 'YYYY-MM' au mois median du trimestre."""
+    mq = {"1": "02", "2": "05", "3": "08", "4": "11"}
+    def qserie(code, key):
+        j = requests.get(f"https://bds.hcp.ma/api/v1/indicators/{code}", timeout=25).json()
+        out = {}
+        for p in j["periods"]:                     # 'YYYYTQ'
+            c = j["data"].get(f"{key}_{p}")
+            if c and c["value"] not in (None, ""):
+                y, q = p.split("T")
+                out[f"{y}-{mq[q]}"] = round(_hcp_num(c["value"]), 1)
+        return out
+    return qserie("I4249", "173.176"), qserie("I4250", "181.184")   # chomage, activite (age Ensemble . milieu National)
+
+
+def load_commerce_ext():
+    """Exports (I4183/1370) et imports (I4185/1380), Total, mensuel 2014-2025, source Office des Changes.
+    Convertis en milliards de DH. Renvoie (exports, imports, solde commercial)."""
+    def total(code, mid):
+        j = requests.get(f"https://bds.hcp.ma/api/v1/indicators/{code}", timeout=25).json()
+        out = {}
+        for p in j["periods"]:                     # 'YYYYMn'
+            c = j["data"].get(f"{mid}_{p}")
+            if c and c["value"] not in (None, ""):
+                y, m = p.split("M")
+                out[f"{y}-{int(m):02d}"] = round(_hcp_num(c["value"]) / 1000, 2)   # millions -> milliards
+        return out
+    exp, imp = total("I4183", "1370"), total("I4185", "1380")
+    solde = {k: round(exp[k] - imp[k], 2) for k in exp if k in imp}
+    return exp, imp, solde
+
+
+def load_cereales():
+    """Production cerealiere nationale (I3824, Min. Agriculture), par campagne annuelle, en millions de quintaux.
+    Region nationale = 4690. Cle 'YYYY-05' (annee de recolte, 2e annee de la campagne)."""
+    j = requests.get("https://bds.hcp.ma/api/v1/indicators/I3824", timeout=25).json()
+    types = {"Total": "4617", "Blé dur": "4613", "Blé tendre": "4614", "Orge": "4615"}
+    out = {lab: {} for lab in types}
+    for p in j["periods"]:                          # '2015-2016'
+        an2 = p.split("-")[1]
+        for lab, cid in types.items():
+            c = j["data"].get(f"{cid}.4690_{p}")
+            if c and c["value"] not in (None, ""):
+                out[lab][f"{an2}-05"] = round(_hcp_num(c["value"]) / 1000, 1)   # milliers -> millions quintaux
+    return out
+
+
 _DEB_MQ = {"T1": "02", "T2": "05", "T3": "08", "T4": "11"}   # trimestre -> mois median
 _DEB_LIGNES = {                                # libelle fichier -> cle serie (les 2 formats)
     "Taux global": "global", "Taux débiteur": "global",
@@ -349,6 +401,9 @@ NOTES = {
     "depots": "Taux moyen pondéré des dépôts à terme (comptes et bons de caisse) à 6 et 12 mois, mensuel. Taux créditeurs offerts aux épargnants ; ils suivent le taux directeur BAM avec retard et mesurent la transmission de la politique monétaire au passif des banques.",
     "debiteurs": "Taux débiteurs (enquête trimestrielle BAM) : le taux que les banques facturent sur les nouveaux crédits, taux global et par usage (trésorerie, équipement, immobilier, consommation). Cœur de la transmission de la politique monétaire à l'économie réelle. Couverture trimestrielle continue 2010 à 2026 (plusieurs exports BAM assemblés).",
     "icm": "Indice de Confiance des Ménages (HCP, enquête nationale de conjoncture). Moyenne des soldes d'opinion des ménages sur leur niveau de vie, leurs finances, le chômage et l'opportunité d'achat. Échelle 0 à 200, où 100 = neutre : en dessous, le pessimisme domine. Source : fichier de données HCP (depuis 2008) prolongé par les communiqués trimestriels.",
+    "travail": "Taux de chômage et taux d'activité au niveau national, ensemble des âges (HCP, Enquête Nationale sur l'Emploi), trimestriel. Le taux d'activité est la part de la population en âge de travailler qui est active (occupée ou au chômage) ; il baisse structurellement au Maroc. Le chômage est fortement saisonnier et sensible aux campagnes agricoles.",
+    "commerce": "Exportations, importations et solde commercial (biens uniquement), mensuel, en milliards de dirhams (source Office des Changes via API HCP). C'est la balance commerciale, principale composante des comptes extérieurs. Le solde est structurellement déficitaire ; il ne couvre pas les services, transferts MRE et flux financiers de la balance des paiements complète.",
+    "cereales": "Production céréalière nationale par campagne agricole (Ministère de l'Agriculture via API HCP), en millions de quintaux. Total et par type (blé tendre, blé dur, orge). Extrêmement volatile selon la pluviométrie : une mauvaise campagne fait plonger la croissance du PIB agricole, donc du PIB global. La composante hors céréalière n'est pas publiée séparément.",
 }
 
 
@@ -469,6 +524,30 @@ def build_data():
                    "lines": [{"label": "ICM", "color": BLEU, "points": icm}]}
     print(f"{'Confiance ménages (ICM)':<30} {'ICM':<12} {len(icm)} trim.  (fichier HCP + notes trim.)")
 
+    chom, act = load_marche_travail()
+    data["travail"] = {"name": "Marché du travail (chômage & activité)", "section": "Données économiques nationales",
+                       "group": "Marché du travail", "unit": "% de la population", "decimals": 1, "agg": "avg", "freq": "Q",
+                       "lines": [{"label": "Taux de chômage", "color": ROUGE, "points": chom},
+                                 {"label": "Taux d'activité", "color": BLEU, "points": act}]}
+    print(f"{'Marché du travail (HCP)':<30} {'2 series':<12} {len(chom)} trim.  (API HCP I4249/I4250)")
+
+    exp, imp, solde = load_commerce_ext()
+    data["commerce"] = {"name": "Commerce extérieur (biens)", "section": "Données économiques nationales",
+                        "group": "Comptes extérieurs", "unit": "milliards DH / mois", "decimals": 1, "agg": "avg", "freq": "M",
+                        "lines": [{"label": "Solde commercial", "color": ROUGE, "points": solde},
+                                  {"label": "Exportations", "color": VERT, "points": exp},
+                                  {"label": "Importations", "color": ORANGE, "points": imp}]}
+    print(f"{'Commerce extérieur (HCP)':<30} {'3 series':<12} {len(exp)} mois  (API HCP I4183/I4185, Office des Changes)")
+
+    cer = load_cereales()
+    data["cereales"] = {"name": "Production céréalière", "section": "Données économiques nationales",
+                        "group": "Agriculture", "unit": "millions de quintaux", "decimals": 1, "agg": "avg", "freq": "A",
+                        "lines": [{"label": "Total céréales", "color": BLEU, "points": cer["Total"]},
+                                  {"label": "Blé tendre", "color": ORANGE, "points": cer["Blé tendre"]},
+                                  {"label": "Blé dur", "color": VERT, "points": cer["Blé dur"]},
+                                  {"label": "Orge", "color": ROUGE, "points": cer["Orge"]}]}
+    print(f"{'Production céréalière (HCP)':<30} {'4 series':<12} {len(cer['Total'])} camp.  (API HCP I3824, Min. Agriculture)")
+
     for k in data:
         data[k]["note"] = NOTES.get(k, "Survole la courbe pour lire la date et la valeur exacte.")
         # Stats descriptives calculees sur la courbe la plus longue (frequence native).
@@ -505,7 +584,7 @@ TAXONOMY = [
     ]},
     {"section": "Données économiques nationales", "topics": [
         {"name": "Activité, climat des affaires et coûts de production (industrie)",
-         "source": "Enquête mensuelle BAM (400 entreprises industrielles)", "ids": []},
+         "source": "Enquête mensuelle BAM (400 entreprises industrielles) · qualitatif, hors API HCP, à collecter via fichiers BAM", "ids": []},
         {"name": "Anticipations d'inflation",
          "source": "Enquête trimestrielle BAM auprès des experts du système financier", "ids": []},
         {"name": "Confiance des ménages (ICM)",
@@ -517,21 +596,19 @@ TAXONOMY = [
         {"name": "Output gap (construit, 3 méthodes de BAM)",
          "source": "Construit : filtre HP + fonction de production + semi-structurel · données FMI/WEO & HCP · méthode Chafik/BAM 2017", "ids": ["output_gap", "output_gap_q"]},
         {"name": "Marché du travail (emploi, chômage, taux d'activité)",
-         "source": "HCP", "ids": []},
+         "source": "HCP · Enquête Nationale sur l'Emploi (API BDS, I4249/I4250)", "ids": ["travail"]},
         {"name": "Prix à la consommation, inflation globale, prix à la production",
          "source": "HCP (inflation globale) · Bank Al-Maghrib (inflation sous-jacente)", "ids": ["inflation"]},
         {"name": "Production industrielle, énergétique et minière",
-         "source": "HCP", "ids": []},
-        {"name": "Indice de confiance des ménages",
          "source": "HCP", "ids": []},
         {"name": "Finances publiques et loi de finances",
          "source": "Ministère de l'Économie et des Finances", "ids": []},
         {"name": "Pluviométrie et couvert végétal (production céréalière)",
          "source": "Direction de la Météorologie Nationale · Centre Royal de Télédétection Spatiale", "ids": []},
         {"name": "Production agricole (céréalière et hors céréalière)",
-         "source": "Ministère de l'Agriculture", "ids": []},
+         "source": "Ministère de l'Agriculture (céréalière via API HCP, I3824) · hors céréalière non publiée séparément", "ids": ["cereales"]},
         {"name": "Comptes extérieurs (balance des paiements)",
-         "source": "Office des Changes", "ids": []},
+         "source": "Office des Changes (biens, via API HCP I4183/I4185) · balance des paiements complète non couverte", "ids": ["commerce"]},
     ]},
 ]
 
