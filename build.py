@@ -31,6 +31,7 @@ OUTPUT_GAP_FILE = DATADIR / "Output_gap.csv"
 DEPOTS_FILE = DATADIR / "Depots_terme.csv"
 TAUX_DEB_FILE = DATADIR / "Taux_debiteurs.xlsx"   # ancien fichier 2010-2017
 ICM_FILE = DATADIR / "ICM_HCP.csv"
+EMC_FILE = DATADIR / "EMC_series.xlsx"
 # Exports recents (un ou plusieurs) : tout data/Taux_debiteurs_*.csv est fusionne automatiquement.
 
 OBS = "https://api.stlouisfed.org/fred/series/observations"
@@ -264,6 +265,31 @@ def load_icm():
     return out
 
 
+def load_emc():
+    """Enquete mensuelle de conjoncture industrie (BAM). Fichier de series propre (soldes d'opinion).
+    Renvoie (tuc, soldes) : tuc = {'YYYY-MM': taux}, soldes = {cle: {'YYYY-MM': solde}} pour la branche Global.
+    Mensuel 2010-01 -> 2026-06."""
+    tuc_df = pd.read_excel(EMC_FILE, sheet_name="TUC")
+    tuc_df.columns = ["Mois", "TUC"]
+    tuc_df = tuc_df.dropna()
+    tuc = {pd.to_datetime(r.Mois).strftime("%Y-%m"): round(float(r.TUC), 1) for r in tuc_df.itertuples()}
+
+    df = pd.read_excel(EMC_FILE, sheet_name="indicateur par branche")
+    df.columns = ["Mois", "Branche", "Indicateur", "Solde"]
+    g = df[df["Branche"] == "Global"].dropna(subset=["Indicateur", "Solde"])
+    libelles = {
+        "prod":   "Evolution de la production par rapport au mois précédent",
+        "ventes": "Evolution des ventes par rapport au mois précédent",
+        "cmd":    "Niveau des carnets de commandes par rapport au mois précédent",
+        "prix":   "Evolution des prix des produits finis par rapport au mois précédent",
+    }
+    soldes = {}
+    for cle, lab in libelles.items():
+        sub = g[g["Indicateur"] == lab]
+        soldes[cle] = {pd.to_datetime(r.Mois).strftime("%Y-%m"): round(float(r.Solde), 1) for r in sub.itertuples()}
+    return tuc, soldes
+
+
 def _hcp_num(v):
     return float(str(v).replace("\xa0", "").replace(" ", "").replace(",", "."))
 
@@ -404,6 +430,8 @@ NOTES = {
     "travail": "Taux de chômage et taux d'activité au niveau national, ensemble des âges (HCP, Enquête Nationale sur l'Emploi), trimestriel. Le taux d'activité est la part de la population en âge de travailler qui est active (occupée ou au chômage) ; il baisse structurellement au Maroc. Le chômage est fortement saisonnier et sensible aux campagnes agricoles.",
     "commerce": "Exportations, importations et solde commercial (biens uniquement), mensuel, en milliards de dirhams (source Office des Changes via API HCP). C'est la balance commerciale, principale composante des comptes extérieurs. Le solde est structurellement déficitaire ; il ne couvre pas les services, transferts MRE et flux financiers de la balance des paiements complète.",
     "cereales": "Production céréalière nationale par campagne agricole (Ministère de l'Agriculture via API HCP), en millions de quintaux. Total et par type (blé tendre, blé dur, orge). Extrêmement volatile selon la pluviométrie : une mauvaise campagne fait plonger la croissance du PIB agricole, donc du PIB global. La composante hors céréalière n'est pas publiée séparément.",
+    "tuc": "Taux d'utilisation des capacités de production dans l'industrie (enquête mensuelle de conjoncture BAM), mensuel. Part des capacités effectivement utilisées : plus il est haut, plus l'appareil productif tourne à plein. Baromètre d'activité réelle très suivi, proxy des tensions sur l'offre et de l'écart de production.",
+    "conj_ind": "Soldes d'opinion de l'enquête mensuelle de conjoncture BAM (industrie, branche Global). Un solde = % d'entreprises signalant une hausse moins % signalant une baisse : positif = expansion, négatif = contraction. Production, ventes et carnets de commandes mesurent l'activité ; les prix des produits finis sont un signal avancé d'inflation côté offre.",
 }
 
 
@@ -548,6 +576,20 @@ def build_data():
                                   {"label": "Orge", "color": ROUGE, "points": cer["Orge"]}]}
     print(f"{'Production céréalière (HCP)':<30} {'4 series':<12} {len(cer['Total'])} camp.  (API HCP I3824, Min. Agriculture)")
 
+    tuc, soldes = load_emc()
+    data["tuc"] = {"name": "Taux d'utilisation des capacités (TUC)", "section": "Données économiques nationales",
+                   "group": "Conjoncture industrielle", "unit": "% des capacités", "decimals": 1, "agg": "avg", "freq": "M",
+                   "lines": [{"label": "TUC industrie", "color": BLEU, "points": tuc}]}
+    print(f"{'TUC industrie (BAM EMC)':<30} {'TUC':<12} {len(tuc)} mois  (fichier BAM EMC)")
+
+    data["conj_ind"] = {"name": "Conjoncture industrielle (soldes d'opinion)", "section": "Données économiques nationales",
+                        "group": "Conjoncture industrielle", "unit": "solde d'opinion", "decimals": 1, "agg": "avg", "freq": "M",
+                        "lines": [{"label": "Production", "color": BLEU, "points": soldes["prod"]},
+                                  {"label": "Ventes", "color": ORANGE, "points": soldes["ventes"]},
+                                  {"label": "Carnets de commandes", "color": VERT, "points": soldes["cmd"]},
+                                  {"label": "Prix des produits finis", "color": ROUGE, "points": soldes["prix"]}]}
+    print(f"{'Conjoncture industrielle (EMC)':<30} {'4 series':<12} {len(soldes['prod'])} mois  (fichier BAM EMC, soldes)")
+
     for k in data:
         data[k]["note"] = NOTES.get(k, "Survole la courbe pour lire la date et la valeur exacte.")
         # Stats descriptives calculees sur la courbe la plus longue (frequence native).
@@ -584,7 +626,7 @@ TAXONOMY = [
     ]},
     {"section": "Données économiques nationales", "topics": [
         {"name": "Activité, climat des affaires et coûts de production (industrie)",
-         "source": "Enquête mensuelle BAM (400 entreprises industrielles) · qualitatif, hors API HCP, à collecter via fichiers BAM", "ids": []},
+         "source": "Enquête mensuelle de conjoncture BAM (soldes d'opinion + TUC, fichier de séries)", "ids": ["tuc", "conj_ind"]},
         {"name": "Anticipations d'inflation",
          "source": "Enquête trimestrielle BAM auprès des experts du système financier", "ids": []},
         {"name": "Confiance des ménages (ICM)",
