@@ -504,8 +504,9 @@ NARRATIVES = {
         "(direct, TVA, douane) et les recettes non fiscales ; les dépenses ordinaires couvrent le "
         "fonctionnement de l'État, la charge de la dette et la compensation.\n\n"
         "**Une croissance continue des deux côtés.** Les recettes passent d'environ **147 milliards** "
-        "en 2006 à plus de **400 milliards** en 2024, portées par l'élargissement de l'assiette fiscale "
-        "et la croissance nominale. Les dépenses suivent, de ~124 à ~310 milliards.\n\n"
+        "en 2006 à **409 milliards** en 2025, portées par l'élargissement de l'assiette fiscale et la "
+        "croissance nominale. Les dépenses ordinaires suivent, de ~124 à **372 milliards**. Les deux "
+        "derniers points (2024-2025) sont le réalisé publié par la TGR.\n\n"
         "**Le ciseau se resserre et s'écarte selon les années.** Quand les recettes progressent plus "
         "vite que les dépenses, le solde ordinaire s'améliore ; l'inverse creuse le besoin de "
         "financement. Le poste **compensation** (subventions aux prix) a longtemps été le grand "
@@ -527,9 +528,10 @@ NARRATIVES = {
         "**La consolidation (2013-2019).** Le déficit se réduit progressivement vers **-41 milliards**, "
         "grâce à la décompensation et à une meilleure tenue des recettes.\n\n"
         "**Le choc Covid (2020).** Le déficit explose à **-82,3 milliards**, un record, sous l'effet de "
-        "la chute des recettes et des dépenses de crise. Il se réduit ensuite lentement, vers **-62 "
-        "milliards** en 2024.\n\n"
-        "**La charge de la dette**, elle, monte régulièrement (de ~19 à ~34 milliards), reflet d'un "
-        "stock de dette croissant. Pour BAM, un déficit large et une dette qui coûte cher pèsent sur "
-        "les taux longs et sur la marge de manœuvre de la politique économique.",
+        "la chute des recettes et des dépenses de crise. Il se réduit ensuite et se stabilise autour de "
+        "**-61,5 milliards** en 2024 et 2025 (réalisé TGR).\n\n"
+        "**La charge de la dette**, elle, monte régulièrement (de ~19 milliards en 2006 à **43 "
+        "milliards** en 2025), reflet d'un stock de dette croissant et de la remontée des taux. Pour "
+        "BAM, un déficit large et une dette qui coûte cher pèsent sur les taux longs et sur la marge de "
+        "manœuvre de la politique économique.",
 }

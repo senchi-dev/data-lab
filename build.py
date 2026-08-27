@@ -483,8 +483,8 @@ NOTES = {
     "conj_ind": "Soldes d'opinion de l'enquête mensuelle de conjoncture BAM (industrie, branche Global). Un solde = % d'entreprises signalant une hausse moins % signalant une baisse : positif = expansion, négatif = contraction. Production, ventes et carnets de commandes mesurent l'activité ; les prix des produits finis sont un signal avancé d'inflation côté offre.",
     "ipp": "Indice des prix à la production industrielle, énergétique et minière (IPP, HCP, base 100 = 2010), annuel, par secteur. Mesure le prix de sortie d'usine, un signal d'inflation en amont (les prix producteurs précèdent souvent les prix à la consommation). Série disponible de 1998 à 2021 sur cette base ; pour un suivi frais et mensuel, voir l'IPP base 2018 (mensuel, jusqu'en 2026) non intégré ici.",
     "ipiem": "Indice de la production industrielle, énergétique et minière (IPIEM, HCP, base 100 = 2015), trimestriel, par secteur (manufacturières, électricité, extractives). Mesure le VOLUME produit, pas les prix. Assemblé à partir des notes trimestrielles HCP ; couverture continue T1 2020 à T3 2025. À ne pas confondre avec l'IPP (prix). Baromètre d'activité industrielle réelle, utile pour lire le cycle et l'écart de production.",
-    "finances": "Recettes et dépenses ordinaires du Trésor (HCP, Annuaires statistiques, source Ministère des Finances), annuel en milliards de DH. Les recettes ordinaires (fiscales + non fiscales) financent le fonctionnement de l'État ; leur écart avec les dépenses donne le solde ordinaire. Série assemblée à partir des annuaires 2006 à 2024 (dernière année réalisée).",
-    "deficit": "Déficit budgétaire global du Trésor et charge de la dette (intérêts), annuel en milliards de DH (HCP, Annuaires statistiques). Le déficit global inclut les dépenses d'investissement et les comptes spéciaux, il ne se résume donc pas à recettes moins dépenses ordinaires. C'est l'indicateur clé de la soutenabilité des finances publiques et du besoin d'emprunt de l'État.",
+    "finances": "Recettes et dépenses ordinaires du Trésor (source Ministère des Finances), annuel en milliards de DH. Les recettes ordinaires (fiscales + non fiscales) financent le fonctionnement de l'État ; leur écart avec les dépenses donne le solde ordinaire. Série 2006-2023 assemblée depuis les annuaires HCP, 2024 et 2025 tirés du bulletin réalisé de la TGR (le 2024 provisoire des annuaires a été corrigé par le réalisé).",
+    "deficit": "Déficit budgétaire global du Trésor et charge de la dette (intérêts), annuel en milliards de DH. Le déficit global inclut les dépenses d'investissement et les comptes spéciaux, il ne se résume donc pas à recettes moins dépenses ordinaires. C'est l'indicateur clé du besoin d'emprunt de l'État. Source : annuaires HCP (2006-2023) et bulletin réalisé de la TGR (2024-2025).",
 }
 
 
@@ -665,13 +665,13 @@ def build_data():
                         "group": "Finances publiques", "unit": "milliards DH / an", "decimals": 1, "agg": "avg", "freq": "A",
                         "lines": [{"label": "Recettes ordinaires", "color": VERT, "points": fp["recettes"]},
                                   {"label": "Dépenses ordinaires", "color": ORANGE, "points": fp["depenses"]}]}
-    print(f"{'Finances publiques (HCP)':<30} {'2 series':<12} {len(fp['recettes'])} ans  (annuaires HCP, 2006-2024)")
+    print(f"{'Finances publiques (HCP)':<30} {'2 series':<12} {len(fp['recettes'])} ans  (annuaires HCP + TGR, 2006-2025)")
 
     data["deficit"] = {"name": "Déficit du Trésor & charge de la dette", "section": "Données économiques nationales",
                        "group": "Finances publiques", "unit": "milliards DH / an", "decimals": 1, "agg": "avg", "freq": "A",
                        "lines": [{"label": "Déficit budgétaire global", "color": ROUGE, "points": fp["deficit"]},
                                  {"label": "Charge de la dette (intérêts)", "color": BLEU, "points": fp["dette"]}]}
-    print(f"{'Déficit Trésor (HCP)':<30} {'2 series':<12} {len(fp['deficit'])} ans  (annuaires HCP, 2006-2024)")
+    print(f"{'Déficit Trésor (HCP)':<30} {'2 series':<12} {len(fp['deficit'])} ans  (annuaires HCP + TGR, 2006-2025)")
 
     for k in data:
         data[k]["note"] = NOTES.get(k, "Survole la courbe pour lire la date et la valeur exacte.")
@@ -727,7 +727,7 @@ TAXONOMY = [
         {"name": "Production industrielle, énergétique et minière (IPIEM, volume)",
          "source": "HCP · notes trimestrielles IPIEM base 2015 (assemblées, T1 2020 à T3 2025)", "ids": ["ipiem"]},
         {"name": "Finances publiques et loi de finances",
-         "source": "HCP · Annuaires statistiques (source Ministère des Finances), assemblés 2006-2024", "ids": ["finances", "deficit"]},
+         "source": "HCP · Annuaires statistiques (2006-2023) + TGR bulletin réalisé (2024-2025) · source Ministère des Finances", "ids": ["finances", "deficit"]},
         {"name": "Pluviométrie et couvert végétal (production céréalière)",
          "source": "Direction de la Météorologie Nationale · Centre Royal de Télédétection Spatiale", "ids": []},
         {"name": "Production agricole (céréalière et hors céréalière)",
