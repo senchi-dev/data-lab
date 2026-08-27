@@ -32,6 +32,7 @@ DEPOTS_FILE = DATADIR / "Depots_terme.csv"
 TAUX_DEB_FILE = DATADIR / "Taux_debiteurs.xlsx"   # ancien fichier 2010-2017
 ICM_FILE = DATADIR / "ICM_HCP.csv"
 EMC_FILE = DATADIR / "EMC_series.xlsx"
+IPIEM_FILE = DATADIR / "IPIEM_base2015.csv"
 # Exports recents (un ou plusieurs) : tout data/Taux_debiteurs_*.csv est fusionne automatiquement.
 
 OBS = "https://api.stlouisfed.org/fred/series/observations"
@@ -294,6 +295,24 @@ def _hcp_num(v):
     return float(str(v).replace("\xa0", "").replace(" ", "").replace(",", "."))
 
 
+def load_ipiem():
+    """Indice de la production industrielle, energetique et miniere (IPIEM, HCP, base 2015), trimestriel.
+    Assemble a partir des notes trimestrielles HCP (docx). 3 secteurs. Cle 'YYYY-MM' (mois median du trimestre).
+    Renvoie {label: {cle: valeur}}."""
+    import csv
+    out = {"Manufacturières": {}, "Électricité": {}, "Extractives": {}}
+    with open(IPIEM_FILE, encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            p = row["periode"]
+            if row.get("manufacturieres"):
+                out["Manufacturières"][p] = round(float(row["manufacturieres"]), 1)
+            if row.get("electricite"):
+                out["Électricité"][p] = round(float(row["electricite"]), 1)
+            if row.get("extractives"):
+                out["Extractives"][p] = round(float(row["extractives"]), 1)
+    return out
+
+
 def load_ipp():
     """Indice des prix a la production industrielle (IPP, HCP I1418, base 2010), annuel 1998-2021.
     4 secteurs agreges. Cle 'YYYY-07' (mi-annee). Renvoie {label: {cle: valeur}}."""
@@ -448,6 +467,7 @@ NOTES = {
     "tuc": "Taux d'utilisation des capacités de production dans l'industrie (enquête mensuelle de conjoncture BAM), mensuel. Part des capacités effectivement utilisées : plus il est haut, plus l'appareil productif tourne à plein. Baromètre d'activité réelle très suivi, proxy des tensions sur l'offre et de l'écart de production.",
     "conj_ind": "Soldes d'opinion de l'enquête mensuelle de conjoncture BAM (industrie, branche Global). Un solde = % d'entreprises signalant une hausse moins % signalant une baisse : positif = expansion, négatif = contraction. Production, ventes et carnets de commandes mesurent l'activité ; les prix des produits finis sont un signal avancé d'inflation côté offre.",
     "ipp": "Indice des prix à la production industrielle, énergétique et minière (IPP, HCP, base 100 = 2010), annuel, par secteur. Mesure le prix de sortie d'usine, un signal d'inflation en amont (les prix producteurs précèdent souvent les prix à la consommation). Série disponible de 1998 à 2021 sur cette base ; pour un suivi frais et mensuel, voir l'IPP base 2018 (mensuel, jusqu'en 2026) non intégré ici.",
+    "ipiem": "Indice de la production industrielle, énergétique et minière (IPIEM, HCP, base 100 = 2015), trimestriel, par secteur (manufacturières, électricité, extractives). Mesure le VOLUME produit, pas les prix. Assemblé à partir des notes trimestrielles HCP ; couverture continue T1 2020 à T3 2025. À ne pas confondre avec l'IPP (prix). Baromètre d'activité industrielle réelle, utile pour lire le cycle et l'écart de production.",
 }
 
 
@@ -615,6 +635,14 @@ def build_data():
                              {"label": "Eau", "color": ROUGE, "points": ipp["Eau"]}]}
     print(f"{'IPP prix production (HCP)':<30} {'4 series':<12} {len(ipp['Manufacturières'])} ans  (API HCP I1418, base 2010)")
 
+    ipiem = load_ipiem()
+    data["ipiem"] = {"name": "Production industrielle (IPIEM, volume)", "section": "Données économiques nationales",
+                     "group": "Conjoncture industrielle", "unit": "indice (base 100 = 2015)", "decimals": 1, "agg": "avg", "freq": "Q",
+                     "lines": [{"label": "Manufacturières", "color": BLEU, "points": ipiem["Manufacturières"]},
+                               {"label": "Électricité", "color": ORANGE, "points": ipiem["Électricité"]},
+                               {"label": "Extractives", "color": VERT, "points": ipiem["Extractives"]}]}
+    print(f"{'IPIEM production (HCP)':<30} {'3 series':<12} {len(ipiem['Manufacturières'])} trim.  (notes HCP, base 2015)")
+
     for k in data:
         data[k]["note"] = NOTES.get(k, "Survole la courbe pour lire la date et la valeur exacte.")
         # Stats descriptives calculees sur la courbe la plus longue (frequence native).
@@ -666,8 +694,8 @@ TAXONOMY = [
          "source": "HCP · Enquête Nationale sur l'Emploi (API BDS, I4249/I4250)", "ids": ["travail"]},
         {"name": "Prix à la consommation, inflation globale, prix à la production",
          "source": "HCP (inflation globale, IPP) · Bank Al-Maghrib (inflation sous-jacente)", "ids": ["inflation", "ipp"]},
-        {"name": "Production industrielle, énergétique et minière",
-         "source": "HCP", "ids": []},
+        {"name": "Production industrielle, énergétique et minière (IPIEM, volume)",
+         "source": "HCP · notes trimestrielles IPIEM base 2015 (assemblées, T1 2020 à T3 2025)", "ids": ["ipiem"]},
         {"name": "Finances publiques et loi de finances",
          "source": "Ministère de l'Économie et des Finances", "ids": []},
         {"name": "Pluviométrie et couvert végétal (production céréalière)",

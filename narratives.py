@@ -475,4 +475,27 @@ NARRATIVES = {
         "**s'arrête en 2021** dans cette version de l'indicateur HCP. Elle sert donc de contexte "
         "structurel de longue période, pas de signal fin et récent. Pour un suivi mensuel et à jour, "
         "l'IPP en base 2018 (jusqu'en 2026) serait la version à privilégier.",
+    "ipiem":
+        "L'indice de la production industrielle, énergétique et minière (IPIEM), publié par le HCP en "
+        "base 100 = 2015. Attention à ne pas le confondre avec l'IPP : ici on mesure le **volume "
+        "produit** (les quantités), pas les prix. C'est un baromètre d'**activité industrielle réelle**, "
+        "par secteur (manufacturières, électricité, extractives).\n\n"
+        "**Les manufacturières, le socle.** L'indice manufacturier progresse régulièrement, d'environ "
+        "**110 à 125** entre 2020 et 2025, reflet d'une industrie de transformation qui monte en "
+        "puissance (automobile, chimie, agroalimentaire).\n\n"
+        "**L'électricité, la plus dynamique.** La production électrique grimpe nettement, jusqu'à "
+        "**près de 160** en 2025, portée par la demande et les capacités renouvelables. C'est le "
+        "secteur le plus en hausse sur la période.\n\n"
+        "**Les extractives, montagnes russes.** C'est le secteur le plus volatil : l'indice culmine "
+        "autour de **148** en 2021 et 2025, mais s'effondre à **90** début 2023. Ces à-coups suivent "
+        "le cycle mondial des **phosphates** (le Maroc est un acteur majeur) : envolée de la demande et "
+        "des prix en 2021-2022, puis correction en 2023.\n\n"
+        "**Pour BAM.** L'IPIEM est une mesure directe de l'activité industrielle, un des moteurs de la "
+        "composante non agricole du PIB. Croisé avec le TUC et les soldes de conjoncture, il aide à "
+        "situer l'économie dans son cycle et à juger de l'écart de production, un élément clé du "
+        "diagnostic sur les pressions inflationnistes.\n\n"
+        "**Sur la construction.** Série assemblée à la main depuis les notes trimestrielles du HCP "
+        "(base 2015), couverture continue **T1 2020 à T3 2025**. Les publications antérieures utilisent "
+        "des bases différentes (2010, 1998) non raccordables proprement, d'où le point de départ en "
+        "2020.",
 }
