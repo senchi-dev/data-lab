@@ -28,6 +28,7 @@ MONIA_FILE = DATADIR / "MONIA.xlsx"
 INFLATION_FILE = DATADIR / "Inflation_BAM.xlsx"
 IPAI_FILE = DATADIR / "IPAI_BAM.xlsx"
 OUTPUT_GAP_FILE = DATADIR / "Output_gap.csv"
+DEPOTS_FILE = DATADIR / "Depots_terme.csv"
 
 OBS = "https://api.stlouisfed.org/fred/series/observations"
 DEBUT = "2006-01-01"
@@ -207,6 +208,35 @@ def load_inflation_bam():
     return glob, core
 
 
+_MOIS_FR = {"janvier": "01", "février": "02", "fevrier": "02", "mars": "03", "avril": "04",
+            "mai": "05", "juin": "06", "juillet": "07", "août": "08", "aout": "08",
+            "septembre": "09", "octobre": "10", "novembre": "11", "décembre": "12", "decembre": "12"}
+
+
+def load_depots():
+    """Taux moyens ponderes des depots a terme (fichier BAM), mensuel, en %.
+    Renvoie (6 mois, 12 mois) : dicts 'YYYY-MM'. Fichier separateur ';', mois FR, valeurs '2,51 %'."""
+    import csv
+    d6, d12 = {}, {}
+    with open(DEPOTS_FILE, encoding="utf-8") as f:
+        rows = list(csv.reader(f, delimiter=";"))
+    for row in rows:
+        if len(row) < 3 or "-" not in row[0]:      # saute titre et en-tete
+            continue
+        mois, an = row[0].split("-")
+        mm = _MOIS_FR.get(mois.strip().lower())
+        if not mm:
+            continue
+        ym = f"{an.strip()}-{mm}"
+        v6 = _num_fr(row[1].replace("%", ""))
+        v12 = _num_fr(row[2].replace("%", ""))
+        if v6 is not None:
+            d6[ym] = round(v6, 2)
+        if v12 is not None:
+            d12[ym] = round(v12, 2)
+    return d6, d12
+
+
 # Note affichee sous chaque graphe, specifique a la serie.
 NOTES = {
     "bce": "Taux directeur BCE, niveau en fin de période (décision réelle, pas de 0,25 %). Refi (haut) vs dépôt (bas, devenu le vrai pilote depuis 2014).",
@@ -225,6 +255,7 @@ NOTES = {
     "ipai": "Indice des prix des actifs immobiliers (base 100 = T1 2006). Global vs résidentiel. Quasi plat sur 20 ans → prix réels en baisse.",
     "m3": "Agrégats monétaires M1/M2/M3 en milliards de dirhams (annuel). M3 (masse monétaire large) est le plus suivi ; une croissance excessive précède l'inflation à moyen terme.",
     "capi": "Capitalisation boursière totale de la Bourse de Casablanca (annuel, milliards DH). Valeur du marché actions et canal d'effet de richesse.",
+    "depots": "Taux moyen pondéré des dépôts à terme (comptes et bons de caisse) à 6 et 12 mois, mensuel. Taux créditeurs offerts aux épargnants ; ils suivent le taux directeur BAM avec retard et mesurent la transmission de la politique monétaire au passif des banques.",
 }
 
 
@@ -322,6 +353,13 @@ def build_data():
                     "lines": [{"label": "Capitalisation", "color": BLEU, "points": capi}]}
     print(f"{'Capitalisation boursière (HCP)':<30} {'total':<12} {len(capi)} ans  (API HCP I1887)")
 
+    d6, d12 = load_depots()
+    data["depots"] = {"name": "Taux des dépôts à terme (6 et 12 mois)", "section": "Données monétaires et financières nationales",
+                      "group": "Taux créditeurs", "unit": "%", "decimals": 2, "agg": "avg", "freq": "M",
+                      "lines": [{"label": "Dépôts à 12 mois", "color": BLEU, "points": d12},
+                                {"label": "Dépôts à 6 mois", "color": ORANGE, "points": d6}]}
+    print(f"{'Dépôts à terme (BAM)':<30} {'2 series':<12} {len(d6)}/{len(d12)} mois  (fichier BAM, avg)")
+
     for k in data:
         data[k]["note"] = NOTES.get(k, "Survole la courbe pour lire la date et la valeur exacte.")
         # Stats descriptives calculees sur la courbe la plus longue (frequence native).
@@ -349,6 +387,8 @@ TAXONOMY = [
          "source": "BAM", "ids": ["monia"]},
         {"name": "Marchés des capitaux",
          "source": "Bourse de Casablanca (via API HCP, I1887)", "ids": ["capi"]},
+        {"name": "Taux créditeurs (dépôts à terme 6 et 12 mois)",
+         "source": "Bank Al-Maghrib (taux moyen pondéré des comptes et bons de caisse)", "ids": ["depots"]},
         {"name": "Taux débiteurs et production du crédit",
          "source": "Reporting trimestriel du système bancaire à BAM", "ids": []},
         {"name": "Conditions d'octroi du crédit bancaire",
