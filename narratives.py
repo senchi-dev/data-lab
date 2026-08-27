@@ -498,4 +498,38 @@ NARRATIVES = {
         "(base 2015), couverture continue **T1 2020 à T3 2025**. Les publications antérieures utilisent "
         "des bases différentes (2010, 1998) non raccordables proprement, d'où le point de départ en "
         "2020.",
+    "finances":
+        "Les recettes et les dépenses ordinaires du Trésor, en milliards de dirhams par an (données du "
+        "Ministère des Finances, via les annuaires du HCP). Les recettes ordinaires regroupent l'impôt "
+        "(direct, TVA, douane) et les recettes non fiscales ; les dépenses ordinaires couvrent le "
+        "fonctionnement de l'État, la charge de la dette et la compensation.\n\n"
+        "**Une croissance continue des deux côtés.** Les recettes passent d'environ **147 milliards** "
+        "en 2006 à plus de **400 milliards** en 2024, portées par l'élargissement de l'assiette fiscale "
+        "et la croissance nominale. Les dépenses suivent, de ~124 à ~310 milliards.\n\n"
+        "**Le ciseau se resserre et s'écarte selon les années.** Quand les recettes progressent plus "
+        "vite que les dépenses, le solde ordinaire s'améliore ; l'inverse creuse le besoin de "
+        "financement. Le poste **compensation** (subventions aux prix) a longtemps été le grand "
+        "déstabilisateur, avant sa réforme progressive à partir de 2013.\n\n"
+        "**Pour BAM.** La politique budgétaire est le complément de la politique monétaire. Une "
+        "dépense publique très expansive peut alimenter la demande et l'inflation, compliquant la "
+        "tâche de BAM ; un budget qui se consolide va dans le même sens qu'un resserrement. Les "
+        "recettes sont aussi un bon thermomètre de l'activité économique sous-jacente.",
+    "deficit":
+        "Le déficit budgétaire global du Trésor et la charge de la dette (les intérêts payés), en "
+        "milliards de dirhams par an. Le **déficit global** est calculé après les dépenses "
+        "d'investissement et les comptes spéciaux : il ne se résume donc pas à recettes moins dépenses "
+        "ordinaires, et mesure le vrai **besoin d'emprunt de l'État**.\n\n"
+        "**Le quasi-équilibre d'avant-crise (2007-2008).** Le Maroc affiche même de légers excédents "
+        "(autour de +3 à +4 milliards), grâce à des recettes fiscales dynamiques et des privatisations.\n\n"
+        "**Le dérapage (2009-2012).** La crise mondiale et surtout l'explosion de la **compensation** "
+        "(flambée des prix du pétrole subventionné) creusent le déficit jusqu'à un plus bas de **-57,6 "
+        "milliards en 2012**. C'est ce dérapage qui déclenche la réforme de la compensation.\n\n"
+        "**La consolidation (2013-2019).** Le déficit se réduit progressivement vers **-41 milliards**, "
+        "grâce à la décompensation et à une meilleure tenue des recettes.\n\n"
+        "**Le choc Covid (2020).** Le déficit explose à **-82,3 milliards**, un record, sous l'effet de "
+        "la chute des recettes et des dépenses de crise. Il se réduit ensuite lentement, vers **-62 "
+        "milliards** en 2024.\n\n"
+        "**La charge de la dette**, elle, monte régulièrement (de ~19 à ~34 milliards), reflet d'un "
+        "stock de dette croissant. Pour BAM, un déficit large et une dette qui coûte cher pèsent sur "
+        "les taux longs et sur la marge de manœuvre de la politique économique.",
 }

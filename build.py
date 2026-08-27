@@ -33,6 +33,7 @@ TAUX_DEB_FILE = DATADIR / "Taux_debiteurs.xlsx"   # ancien fichier 2010-2017
 ICM_FILE = DATADIR / "ICM_HCP.csv"
 EMC_FILE = DATADIR / "EMC_series.xlsx"
 IPIEM_FILE = DATADIR / "IPIEM_base2015.csv"
+FIN_PUB_FILE = DATADIR / "Finances_publiques.csv"
 # Exports recents (un ou plusieurs) : tout data/Taux_debiteurs_*.csv est fusionne automatiquement.
 
 OBS = "https://api.stlouisfed.org/fred/series/observations"
@@ -295,6 +296,20 @@ def _hcp_num(v):
     return float(str(v).replace("\xa0", "").replace(" ", "").replace(",", "."))
 
 
+def load_finances_publiques():
+    """Finances publiques du Trésor (HCP Annuaires statistiques, assemblés), annuel 2006-2024, en milliards DH.
+    Renvoie {cle_metrique: {'YYYY-07': valeur}} pour recettes, depenses, deficit, dette."""
+    import csv
+    out = {"recettes": {}, "depenses": {}, "deficit": {}, "dette": {}}
+    with open(FIN_PUB_FILE, encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            ym = f"{row['annee']}-07"
+            for k in out:
+                if row.get(k) not in (None, ""):
+                    out[k][ym] = round(float(row[k]), 1)
+    return out
+
+
 def load_ipiem():
     """Indice de la production industrielle, energetique et miniere (IPIEM, HCP, base 2015), trimestriel.
     Assemble a partir des notes trimestrielles HCP (docx). 3 secteurs. Cle 'YYYY-MM' (mois median du trimestre).
@@ -468,6 +483,8 @@ NOTES = {
     "conj_ind": "Soldes d'opinion de l'enquête mensuelle de conjoncture BAM (industrie, branche Global). Un solde = % d'entreprises signalant une hausse moins % signalant une baisse : positif = expansion, négatif = contraction. Production, ventes et carnets de commandes mesurent l'activité ; les prix des produits finis sont un signal avancé d'inflation côté offre.",
     "ipp": "Indice des prix à la production industrielle, énergétique et minière (IPP, HCP, base 100 = 2010), annuel, par secteur. Mesure le prix de sortie d'usine, un signal d'inflation en amont (les prix producteurs précèdent souvent les prix à la consommation). Série disponible de 1998 à 2021 sur cette base ; pour un suivi frais et mensuel, voir l'IPP base 2018 (mensuel, jusqu'en 2026) non intégré ici.",
     "ipiem": "Indice de la production industrielle, énergétique et minière (IPIEM, HCP, base 100 = 2015), trimestriel, par secteur (manufacturières, électricité, extractives). Mesure le VOLUME produit, pas les prix. Assemblé à partir des notes trimestrielles HCP ; couverture continue T1 2020 à T3 2025. À ne pas confondre avec l'IPP (prix). Baromètre d'activité industrielle réelle, utile pour lire le cycle et l'écart de production.",
+    "finances": "Recettes et dépenses ordinaires du Trésor (HCP, Annuaires statistiques, source Ministère des Finances), annuel en milliards de DH. Les recettes ordinaires (fiscales + non fiscales) financent le fonctionnement de l'État ; leur écart avec les dépenses donne le solde ordinaire. Série assemblée à partir des annuaires 2006 à 2024 (dernière année réalisée).",
+    "deficit": "Déficit budgétaire global du Trésor et charge de la dette (intérêts), annuel en milliards de DH (HCP, Annuaires statistiques). Le déficit global inclut les dépenses d'investissement et les comptes spéciaux, il ne se résume donc pas à recettes moins dépenses ordinaires. C'est l'indicateur clé de la soutenabilité des finances publiques et du besoin d'emprunt de l'État.",
 }
 
 
@@ -643,6 +660,19 @@ def build_data():
                                {"label": "Extractives", "color": VERT, "points": ipiem["Extractives"]}]}
     print(f"{'IPIEM production (HCP)':<30} {'3 series':<12} {len(ipiem['Manufacturières'])} trim.  (notes HCP, base 2015)")
 
+    fp = load_finances_publiques()
+    data["finances"] = {"name": "Finances publiques (recettes & dépenses)", "section": "Données économiques nationales",
+                        "group": "Finances publiques", "unit": "milliards DH / an", "decimals": 1, "agg": "avg", "freq": "A",
+                        "lines": [{"label": "Recettes ordinaires", "color": VERT, "points": fp["recettes"]},
+                                  {"label": "Dépenses ordinaires", "color": ORANGE, "points": fp["depenses"]}]}
+    print(f"{'Finances publiques (HCP)':<30} {'2 series':<12} {len(fp['recettes'])} ans  (annuaires HCP, 2006-2024)")
+
+    data["deficit"] = {"name": "Déficit du Trésor & charge de la dette", "section": "Données économiques nationales",
+                       "group": "Finances publiques", "unit": "milliards DH / an", "decimals": 1, "agg": "avg", "freq": "A",
+                       "lines": [{"label": "Déficit budgétaire global", "color": ROUGE, "points": fp["deficit"]},
+                                 {"label": "Charge de la dette (intérêts)", "color": BLEU, "points": fp["dette"]}]}
+    print(f"{'Déficit Trésor (HCP)':<30} {'2 series':<12} {len(fp['deficit'])} ans  (annuaires HCP, 2006-2024)")
+
     for k in data:
         data[k]["note"] = NOTES.get(k, "Survole la courbe pour lire la date et la valeur exacte.")
         # Stats descriptives calculees sur la courbe la plus longue (frequence native).
@@ -697,7 +727,7 @@ TAXONOMY = [
         {"name": "Production industrielle, énergétique et minière (IPIEM, volume)",
          "source": "HCP · notes trimestrielles IPIEM base 2015 (assemblées, T1 2020 à T3 2025)", "ids": ["ipiem"]},
         {"name": "Finances publiques et loi de finances",
-         "source": "Ministère de l'Économie et des Finances", "ids": []},
+         "source": "HCP · Annuaires statistiques (source Ministère des Finances), assemblés 2006-2024", "ids": ["finances", "deficit"]},
         {"name": "Pluviométrie et couvert végétal (production céréalière)",
          "source": "Direction de la Météorologie Nationale · Centre Royal de Télédétection Spatiale", "ids": []},
         {"name": "Production agricole (céréalière et hors céréalière)",
