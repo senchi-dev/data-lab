@@ -30,6 +30,7 @@ IPAI_FILE = DATADIR / "IPAI_BAM.xlsx"
 OUTPUT_GAP_FILE = DATADIR / "Output_gap.csv"
 DEPOTS_FILE = DATADIR / "Depots_terme.csv"
 TAUX_DEB_FILE = DATADIR / "Taux_debiteurs.xlsx"   # ancien fichier 2010-2017
+ICM_FILE = DATADIR / "ICM_HCP.csv"
 # Exports recents (un ou plusieurs) : tout data/Taux_debiteurs_*.csv est fusionne automatiquement.
 
 OBS = "https://api.stlouisfed.org/fred/series/observations"
@@ -240,6 +241,29 @@ def load_depots():
     return d6, d12
 
 
+def load_icm():
+    """Indice de Confiance des Menages (HCP, Enquete Nationale de Conjoncture aupres des Menages).
+    Fichier de donnees officiel HCP (2008 T1 -> 2025 T2) + 4 trimestres recents des notes trimestrielles.
+    Trimestriel, echelle 0-200 (100 = neutre). Cle 'YYYY-MM' au mois median du trimestre."""
+    import csv, re
+    mq = {"1": "02", "2": "05", "3": "08", "4": "11"}
+    out = {}
+    with open(ICM_FILE, encoding="utf-8") as f:
+        for row in csv.reader(f):
+            if len(row) < 5:
+                continue
+            m = re.match(r"\s*([1-4])T\s*(\d{4})", row[3])   # "1T 2008"
+            if not m:
+                continue
+            v = _num_fr(row[4])
+            if v is not None:
+                out[f"{m.group(2)}-{mq[m.group(1)]}"] = round(v, 1)
+    # Trimestres posterieurs au fichier officiel, releves dans les communiques trimestriels HCP :
+    recents = {"2025-08": 53.6, "2025-11": 57.6, "2026-02": 64.4, "2026-05": 60.1}
+    out.update(recents)
+    return out
+
+
 _DEB_MQ = {"T1": "02", "T2": "05", "T3": "08", "T4": "11"}   # trimestre -> mois median
 _DEB_LIGNES = {                                # libelle fichier -> cle serie (les 2 formats)
     "Taux global": "global", "Taux débiteur": "global",
@@ -324,6 +348,7 @@ NOTES = {
     "capi": "Capitalisation boursière totale de la Bourse de Casablanca (annuel, milliards DH). Valeur du marché actions et canal d'effet de richesse.",
     "depots": "Taux moyen pondéré des dépôts à terme (comptes et bons de caisse) à 6 et 12 mois, mensuel. Taux créditeurs offerts aux épargnants ; ils suivent le taux directeur BAM avec retard et mesurent la transmission de la politique monétaire au passif des banques.",
     "debiteurs": "Taux débiteurs (enquête trimestrielle BAM) : le taux que les banques facturent sur les nouveaux crédits, taux global et par usage (trésorerie, équipement, immobilier, consommation). Cœur de la transmission de la politique monétaire à l'économie réelle. Couverture trimestrielle continue 2010 à 2026 (plusieurs exports BAM assemblés).",
+    "icm": "Indice de Confiance des Ménages (HCP, enquête nationale de conjoncture). Moyenne des soldes d'opinion des ménages sur leur niveau de vie, leurs finances, le chômage et l'opportunité d'achat. Échelle 0 à 200, où 100 = neutre : en dessous, le pessimisme domine. Source : fichier de données HCP (depuis 2008) prolongé par les communiqués trimestriels.",
 }
 
 
@@ -438,6 +463,12 @@ def build_data():
                                    {"label": "Consommation", "color": ROUGE, "points": td["consommation"]}]}
     print(f"{'Taux débiteurs (BAM)':<30} {'5 series':<12} {len(td['global'])} trim.  (enquête trim. BAM, 2010-2026 continu)")
 
+    icm = load_icm()
+    data["icm"] = {"name": "Confiance des ménages (ICM)", "section": "Données économiques nationales",
+                   "group": "Enquêtes de conjoncture", "unit": "indice (100 = neutre)", "decimals": 1, "agg": "avg", "freq": "Q",
+                   "lines": [{"label": "ICM", "color": BLEU, "points": icm}]}
+    print(f"{'Confiance ménages (ICM)':<30} {'ICM':<12} {len(icm)} trim.  (fichier HCP + notes trim.)")
+
     for k in data:
         data[k]["note"] = NOTES.get(k, "Survole la courbe pour lire la date et la valeur exacte.")
         # Stats descriptives calculees sur la courbe la plus longue (frequence native).
@@ -477,6 +508,8 @@ TAXONOMY = [
          "source": "Enquête mensuelle BAM (400 entreprises industrielles)", "ids": []},
         {"name": "Anticipations d'inflation",
          "source": "Enquête trimestrielle BAM auprès des experts du système financier", "ids": []},
+        {"name": "Confiance des ménages (ICM)",
+         "source": "HCP · Enquête nationale de conjoncture auprès des ménages", "ids": ["icm"]},
         {"name": "Marché immobilier (transactions, prix, indice IPAI)",
          "source": "ANCFCC (Conservation Foncière) · Bank Al-Maghrib", "ids": ["ipai"]},
         {"name": "Comptes nationaux (croissance, PIB, investissement, consommation)",
