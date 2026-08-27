@@ -29,6 +29,8 @@ INFLATION_FILE = DATADIR / "Inflation_BAM.xlsx"
 IPAI_FILE = DATADIR / "IPAI_BAM.xlsx"
 OUTPUT_GAP_FILE = DATADIR / "Output_gap.csv"
 DEPOTS_FILE = DATADIR / "Depots_terme.csv"
+TAUX_DEB_FILE = DATADIR / "Taux_debiteurs.xlsx"
+TAUX_DEB_RECENT_FILE = DATADIR / "Taux_debiteurs_recent.csv"
 
 OBS = "https://api.stlouisfed.org/fred/series/observations"
 DEBUT = "2006-01-01"
@@ -37,6 +39,7 @@ DEST = ROOT / "public"
 FICHIER = DEST / "index.html"
 
 BLEU, ORANGE, VERT = "#2563a8", "#e07b39", "#2e9e6b"
+ROUGE, VIOLET = "#c0392b", "#7c5cbf"
 
 # id -> (nom, SECTION, groupe, unite, decimales, agg, courbes)
 #   SECTION = grande categorie (bloc depliable de la sidebar). Pour ajouter d'autres
@@ -237,6 +240,67 @@ def load_depots():
     return d6, d12
 
 
+_DEB_MQ = {"T1": "02", "T2": "05", "T3": "08", "T4": "11"}   # trimestre -> mois median
+_DEB_LIGNES = {                                # libelle fichier -> cle serie (les 2 formats)
+    "Taux global": "global", "Taux débiteur": "global",
+    "Comptes débiteurs et crédits de trésorerie": "tresorerie",
+    "Crédits à l'équipement": "equipement",
+    "Crédits immobiliers": "immobilier",
+    "Crédits à la consommation": "consommation",
+}
+
+
+def _load_deb_xlsx():
+    """Ancien fichier BAM (xlsx), trimestriel 2010-2017, layout horizontal."""
+    df = pd.read_excel(TAUX_DEB_FILE, header=None)
+    annees = pd.to_numeric(df.iloc[8, 1:], errors="coerce").ffill()   # 2010 sur T1, propage sur T2-T4
+    trims = df.iloc[9, 1:]
+    out = {v: {} for v in set(_DEB_LIGNES.values())}
+    for i in range(10, df.shape[0]):
+        key = _DEB_LIGNES.get(str(df.iloc[i, 0]).strip())
+        if not key:
+            continue
+        for c in range(1, df.shape[1]):
+            an, tr = annees.get(c), trims.get(c)
+            if pd.isna(an) or pd.isna(tr) or str(tr).strip() not in _DEB_MQ:
+                continue
+            if pd.notna(df.iloc[i, c]):
+                out[key][f"{int(an)}-{_DEB_MQ[str(tr).strip()]}"] = round(float(df.iloc[i, c]), 2)
+    return out
+
+
+def _load_deb_recent():
+    """Export BAM recent (csv, sep ';'), trimestriel 2023-2026, layout horizontal. Derniere colonne = delta, ignoree."""
+    import csv
+    with open(TAUX_DEB_RECENT_FILE, encoding="utf-8") as f:
+        rows = [r for r in csv.reader(f, delimiter=";") if any(x.strip() for x in r)]
+    # rows[0]=titre, rows[1]=sous-titre, rows[2]=annees, rows[3]=trimestres, rows[4:]=data
+    annees, prev = [], None
+    for cell in rows[2]:
+        prev = cell.strip() or prev
+        annees.append(prev)
+    trims = [c.strip() for c in rows[3]]
+    out = {v: {} for v in set(_DEB_LIGNES.values())}
+    for r in rows[4:]:
+        key = _DEB_LIGNES.get(r[0].strip().strip('"'))
+        if not key:
+            continue
+        for c in range(1, len(r)):
+            if c >= len(trims) or trims[c] not in _DEB_MQ or not annees[c]:
+                continue
+            v = _num_fr(r[c])
+            if v is not None:
+                out[key][f"{annees[c]}-{_DEB_MQ[trims[c]]}"] = round(v, 2)
+    return out
+
+
+def load_taux_debiteurs():
+    """Taux debiteurs (enquete trimestrielle BAM). Fusionne l'ancien fichier (2010-2017) et
+    l'export recent (2023-2026) ; trou 2018-2022 non couvert. Renvoie {cle_serie: {'YYYY-MM': taux}}."""
+    old, new = _load_deb_xlsx(), _load_deb_recent()
+    return {k: {**old.get(k, {}), **new.get(k, {})} for k in set(old) | set(new)}
+
+
 # Note affichee sous chaque graphe, specifique a la serie.
 NOTES = {
     "bce": "Taux directeur BCE, niveau en fin de période (décision réelle, pas de 0,25 %). Refi (haut) vs dépôt (bas, devenu le vrai pilote depuis 2014).",
@@ -256,6 +320,7 @@ NOTES = {
     "m3": "Agrégats monétaires M1/M2/M3 en milliards de dirhams (annuel). M3 (masse monétaire large) est le plus suivi ; une croissance excessive précède l'inflation à moyen terme.",
     "capi": "Capitalisation boursière totale de la Bourse de Casablanca (annuel, milliards DH). Valeur du marché actions et canal d'effet de richesse.",
     "depots": "Taux moyen pondéré des dépôts à terme (comptes et bons de caisse) à 6 et 12 mois, mensuel. Taux créditeurs offerts aux épargnants ; ils suivent le taux directeur BAM avec retard et mesurent la transmission de la politique monétaire au passif des banques.",
+    "debiteurs": "Taux débiteurs (enquête trimestrielle BAM) : le taux que les banques facturent sur les nouveaux crédits, taux global et par usage (trésorerie, équipement, immobilier, consommation). Cœur de la transmission de la politique monétaire à l'économie réelle. Deux périodes assemblées : 2010-2017 (ancien fichier) et 2023-2026 (export récent) ; la fenêtre 2018-2022 n'est pas couverte.",
 }
 
 
@@ -360,6 +425,16 @@ def build_data():
                                 {"label": "Dépôts à 6 mois", "color": ORANGE, "points": d6}]}
     print(f"{'Dépôts à terme (BAM)':<30} {'2 series':<12} {len(d6)}/{len(d12)} mois  (fichier BAM, avg)")
 
+    td = load_taux_debiteurs()
+    data["debiteurs"] = {"name": "Taux débiteurs (par type de crédit)", "section": "Données monétaires et financières nationales",
+                         "group": "Taux débiteurs", "unit": "%", "decimals": 2, "agg": "avg", "freq": "Q",
+                         "lines": [{"label": "Taux global", "color": BLEU, "points": td["global"]},
+                                   {"label": "Trésorerie", "color": ORANGE, "points": td["tresorerie"]},
+                                   {"label": "Équipement", "color": VERT, "points": td["equipement"]},
+                                   {"label": "Immobilier", "color": VIOLET, "points": td["immobilier"]},
+                                   {"label": "Consommation", "color": ROUGE, "points": td["consommation"]}]}
+    print(f"{'Taux débiteurs (BAM)':<30} {'5 series':<12} {len(td['global'])} trim.  (enquête trim. BAM, 2010-2017 + 2023-2026)")
+
     for k in data:
         data[k]["note"] = NOTES.get(k, "Survole la courbe pour lire la date et la valeur exacte.")
         # Stats descriptives calculees sur la courbe la plus longue (frequence native).
@@ -389,8 +464,8 @@ TAXONOMY = [
          "source": "Bourse de Casablanca (via API HCP, I1887)", "ids": ["capi"]},
         {"name": "Taux créditeurs (dépôts à terme 6 et 12 mois)",
          "source": "Bank Al-Maghrib (taux moyen pondéré des comptes et bons de caisse)", "ids": ["depots"]},
-        {"name": "Taux débiteurs et production du crédit",
-         "source": "Reporting trimestriel du système bancaire à BAM", "ids": []},
+        {"name": "Taux débiteurs (par type de crédit)",
+         "source": "Enquête trimestrielle BAM sur les taux débiteurs (2010-2017 + 2023-2026, trou 2018-2022)", "ids": ["debiteurs"]},
         {"name": "Conditions d'octroi du crédit bancaire",
          "source": "Enquête trimestrielle BAM auprès du système bancaire", "ids": []},
     ]},
