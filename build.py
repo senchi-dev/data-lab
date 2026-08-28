@@ -920,8 +920,8 @@ HTML = r"""<!doctype html>
       <div class="m-notes">
         <div class="m-notes-hd">Notes de méthode et limites</div>
         <ul>
-          <li><b>Output gap reconstruit.</b> L'output gap n'est pas publié pour le Maroc. Je l'ai donc reconstruit moi-même à partir des méthodes documentées dans la littérature (filtre Hodrick-Prescott, fonction de production, approche semi-structurelle), en m'appuyant sur une recherche sur la façon dont ce calcul est mené (<a href="https://revues.imist.ma/index.php/REMSES/fr_CA/article/view/42226/22709" target="_blank" rel="noopener">article REMSES sur le calcul de l'output gap</a>). C'est une estimation, pas une mesure directe.</li>
-          <li><b>Le choix des inputs reste à consolider.</b> La sélection s'appuie pour l'instant sur une logique économique (retenir ce qui cause ou anticipe l'inflation à deux ans, écarter ce qui confirme trop tard ou fait doublon). Mais je n'ai pas encore de critère formel et validé de ce qui fait un bon input pour ce modèle précis (pouvoir prédictif, non-redondance, disponibilité en temps réel, fraîcheur). C'est le point méthodologique le plus ouvert, que je veux discuter et trancher par des tests statistiques.</li>
+          <li><b>Output gap reconstruit.</b> L'output gap n'est pas publié pour le Maroc. Je l'ai donc reconstruit moi-même selon les trois méthodes utilisées par Bank Al-Maghrib, chacune documentée dans la littérature marocaine : le filtre de Hodrick-Prescott (<a href="ref-output-gap-hp.pdf" target="_blank" rel="noopener">Bassite &amp; El Khattab</a>), la fonction de production de Cobb-Douglas (<a href="ref-output-gap-fonction-production.pdf" target="_blank" rel="noopener">Hefnaoui &amp; Charfi, 2024</a>), et l'approche semi-structurelle (filtre multivarié de Blagrave et al., FMI 2015, appliqué au Maroc par Chafik, 2017). C'est une estimation, pas une mesure directe.</li>
+          <li><b>Le choix des inputs reste à consolider.</b> La sélection s'appuie pour l'instant sur une logique économique (retenir ce qui cause ou anticipe l'inflation à deux ans, écarter ce qui confirme trop tard ou fait doublon). Ce que je veux surtout comprendre, c'est comment Bank Al-Maghrib elle-même sélectionne et hiérarchise ses propres inputs.</li>
           <li><b>Sourcing primaire.</b> Chaque donnée a été récupérée directement à la source citée dans le Dispositif informationnel de BAM (HCP, Office des Changes, Bank Al-Maghrib, TGR, ainsi que FRED et le FMI pour l'environnement international), et non via des agrégateurs tiers.</li>
         </ul>
       </div>
@@ -1366,10 +1366,16 @@ def main():
             .replace("__TAXO__", json.dumps(TAXONOMY, ensure_ascii=False)))
     FICHIER.write_text(html, encoding="utf-8")
     write_features(data)
-    # Document source BAM, servi en telechargement depuis la page "La demarche".
-    src_pdf = DATADIR / "Dispositif_informationnel_BAM.pdf"
-    if src_pdf.exists():
-        shutil.copy(src_pdf, DEST / "dispositif-informationnel-bam.pdf")
+    # Documents servis en telechargement depuis la page "La demarche".
+    docs = {
+        "Dispositif_informationnel_BAM.pdf": "dispositif-informationnel-bam.pdf",
+        "ref_output_gap_hp.pdf": "ref-output-gap-hp.pdf",
+        "ref_output_gap_fonction_production.pdf": "ref-output-gap-fonction-production.pdf",
+    }
+    for src_name, dest_name in docs.items():
+        src = DATADIR / src_name
+        if src.exists():
+            shutil.copy(src, DEST / dest_name)
     print(f"\nOK -> {FICHIER}")
 
 
