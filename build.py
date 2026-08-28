@@ -7,6 +7,7 @@ Donnees mensuelles calees sur 2006 (debut des decisions BAM), embarquees en JSON
 """
 import json
 import os
+import shutil
 from datetime import datetime
 from pathlib import Path
 
@@ -803,6 +804,16 @@ HTML = r"""<!doctype html>
         color:var(--accent); margin-bottom:6px; }
   #mission .m-source p{ font-size:13.5px; line-height:1.6; color:var(--ink); margin:0; }
   #mission .m-source b, #mission .m-step b b{ color:var(--ink); }
+  #mission .m-doc{ display:flex; align-items:center; gap:14px; text-decoration:none;
+        background:var(--panel); border:1.5px solid var(--accent); border-radius:14px;
+        padding:14px 18px; margin-bottom:22px; transition:box-shadow .15s, transform .1s; }
+  #mission .m-doc:hover{ box-shadow:0 4px 16px rgba(37,99,168,.18); transform:translateY(-1px); }
+  #mission .m-doc-ico{ flex:0 0 auto; font-size:12px; font-weight:800; letter-spacing:.05em;
+        color:#fff; background:var(--accent); border-radius:8px; padding:9px 11px; }
+  #mission .m-doc-txt{ flex:1; display:flex; flex-direction:column; gap:2px; }
+  #mission .m-doc-txt b{ font-size:14.5px; color:var(--ink); }
+  #mission .m-doc-txt span{ font-size:12.5px; color:var(--muted); }
+  #mission .m-doc-cta{ flex:0 0 auto; font-size:13px; font-weight:700; color:var(--accent); }
   #mission .m-hint{ font-size:12.5px; color:var(--muted); font-style:italic; margin:0; }
   @media (max-width:760px){ #mission .m-steps{ grid-template-columns:1fr; } }
   /* Définition (avant le graphe) */
@@ -891,6 +902,14 @@ HTML = r"""<!doctype html>
         <div class="m-source-hd">Le fil conducteur</div>
         <p>Chaque rubrique de ce tableau de bord correspond à une ligne du <b>Dispositif informationnel de BAM</b>, organisé en trois blocs : environnement international, données monétaires et financières nationales, données économiques nationales. Ce document a servi à décider quoi chercher.</p>
       </div>
+      <a class="m-doc" href="dispositif-informationnel-bam.pdf" target="_blank" rel="noopener">
+        <span class="m-doc-ico">PDF</span>
+        <span class="m-doc-txt">
+          <b>Dispositif informationnel de Bank Al-Maghrib</b>
+          <span>Le document officiel qui recense les sources utilisées par BAM. Cliquez pour l'ouvrir ou le télécharger.</span>
+        </span>
+        <span class="m-doc-cta">Ouvrir ▸</span>
+      </a>
       <p class="m-hint">Choisis une donnée dans le menu de gauche pour voir sa définition, ses statistiques et l'analyse de ses mouvements.</p>
     </section>
     <div class="controls" id="controls">
@@ -1332,6 +1351,10 @@ def main():
             .replace("__TAXO__", json.dumps(TAXONOMY, ensure_ascii=False)))
     FICHIER.write_text(html, encoding="utf-8")
     write_features(data)
+    # Document source BAM, servi en telechargement depuis la page "La demarche".
+    src_pdf = DATADIR / "Dispositif_informationnel_BAM.pdf"
+    if src_pdf.exists():
+        shutil.copy(src_pdf, DEST / "dispositif-informationnel-bam.pdf")
     print(f"\nOK -> {FICHIER}")
 
 
