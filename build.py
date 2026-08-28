@@ -777,18 +777,38 @@ HTML = r"""<!doctype html>
          font-size:13px; cursor:pointer; transition:background .12s; line-height:1.4; }
   .item:hover{ background:var(--accent-soft); }
   .item.active{ background:var(--accent); color:#fff; font-weight:600; }
-  .item.pending{ color:var(--muted); }
+  .item.home{ font-weight:600; margin-bottom:10px; }
+  .item.home .ilab{ margin-left:2px; }
   .dotstat{ width:7px; height:7px; border-radius:50%; flex:0 0 auto; margin-top:6px; }
   .dotstat.on{ background:var(--accent); }
   .dotstat.off{ border:1.5px solid var(--muted); }
   .item.active .dotstat.on{ background:#fff; }
   .ilab{ flex:1; }
   #source{ color:var(--muted); font-size:11.5px; margin-top:5px; }
-  #placeholder{ display:none; background:var(--panel); border:1px dashed var(--line);
-        border-radius:14px; padding:40px 28px; text-align:center; color:var(--muted); margin-top:12px; }
-  #placeholder .big{ font-size:15px; color:var(--ink); margin-bottom:8px; }
-  #placeholder .src2{ font-size:13px; margin-top:14px; }
-  #placeholder b{ color:var(--ink); }
+  /* Accueil : la mission / l'exercice */
+  #mission{ display:none; max-width:860px; }
+  #mission .m-kicker{ font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+        color:var(--accent); margin:18px 0 10px; }
+  #mission .m-title{ font-size:27px; line-height:1.2; margin:0 0 12px; color:var(--ink); }
+  #mission .m-lead{ font-size:15px; line-height:1.6; color:var(--muted); margin:0 0 26px; max-width:680px; }
+  #mission .m-steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+  #mission .m-step{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px 18px 16px; }
+  #mission .m-num{ display:inline-block; font-size:13px; font-weight:800; color:var(--accent);
+        background:var(--accent-soft); border-radius:7px; padding:3px 9px; margin-bottom:10px; }
+  #mission .m-step b{ display:block; font-size:15px; color:var(--ink); margin-bottom:6px; }
+  #mission .m-step p{ font-size:13px; line-height:1.55; color:var(--muted); margin:0; }
+  #mission .m-source{ background:var(--accent-soft); border-left:3px solid var(--accent);
+        border-radius:0 12px 12px 0; padding:16px 18px; margin-bottom:18px; }
+  #mission .m-source-hd{ font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+        color:var(--accent); margin-bottom:6px; }
+  #mission .m-source p{ font-size:13.5px; line-height:1.6; color:var(--ink); margin:0; }
+  #mission .m-source b, #mission .m-step b b{ color:var(--ink); }
+  #mission .m-hint{ font-size:12.5px; color:var(--muted); font-style:italic; margin:0; }
+  @media (max-width:760px){ #mission .m-steps{ grid-template-columns:1fr; } }
+  /* Définition (avant le graphe) */
+  #definition{ background:var(--accent-soft); border-radius:12px; padding:4px 18px 14px; margin:16px 0 4px; }
+  #definition .sec-hd{ margin:14px 0 6px; }
+  #definition p{ font-size:13.5px; line-height:1.6; color:var(--ink); margin:0; max-width:760px; }
   main{ padding:26px 30px; overflow-y:auto; min-height:0; }
   .head{ display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; }
   .head h2{ margin:0; font-size:21px; }
@@ -843,7 +863,7 @@ HTML = r"""<!doctype html>
 <div class="app">
   <aside>
     <h1>Data Lab</h1>
-    <p class="sub">Données macro &amp; marchés · graphiques, statistiques et analyses</p>
+    <p class="sub">Les inputs de la décision de Bank Al-Maghrib · définitions, statistiques et analyse des mouvements</p>
     <nav id="nav"></nav>
   </aside>
   <main>
@@ -854,11 +874,25 @@ HTML = r"""<!doctype html>
       </div>
       <span class="unit" id="unit"></span>
     </div>
-    <div id="placeholder">
-      <div class="big">Donnée pas encore collectée</div>
-      <div>Cette rubrique fait partie du dispositif informationnel de BAM, mais nous ne l'avons pas encore intégrée au dashboard.</div>
-      <div class="src2">Source officielle : <b id="ph-src"></b></div>
+    <div id="definition">
+      <h3 class="sec-hd">Définition</h3>
+      <p id="def-text"></p>
     </div>
+    <section id="mission">
+      <div class="m-kicker">L'exercice</div>
+      <h2 class="m-title">Les inputs de la décision de politique monétaire de Bank Al-Maghrib</h2>
+      <p class="m-lead">Construire la base de données qui alimente un modèle d'anticipation des décisions de taux de BAM (hausse, baisse ou statu quo). Trois étapes.</p>
+      <div class="m-steps">
+        <div class="m-step"><span class="m-num">01</span><b>Choisir les inputs</b><p>Sélectionner les indicateurs qui pèsent réellement sur la décision : ceux qui causent ou anticipent l'inflation à deux ans, et les canaux externes qui la pilotent au Maroc.</p></div>
+        <div class="m-step"><span class="m-num">02</span><b>Chercher la data</b><p>Sourcer chaque input sur des sources primaires. Le périmètre suit le <b>Dispositif informationnel de Bank Al-Maghrib</b>, le document officiel qui recense les sources que la Banque utilise pour élaborer ses prévisions.</p></div>
+        <div class="m-step"><span class="m-num">03</span><b>Analyser les mouvements</b><p>Pour chaque série : une définition complète, des statistiques descriptives, puis un commentaire des grands mouvements et de ce qui s'est passé dans le monde pour les provoquer.</p></div>
+      </div>
+      <div class="m-source">
+        <div class="m-source-hd">Le fil conducteur</div>
+        <p>Chaque rubrique de ce tableau de bord correspond à une ligne du <b>Dispositif informationnel de BAM</b>, organisé en trois blocs : environnement international, données monétaires et financières nationales, données économiques nationales. Ce document a servi à décider quoi chercher.</p>
+      </div>
+      <p class="m-hint">Choisis une donnée dans le menu de gauche pour voir sa définition, ses statistiques et l'analyse de ses mouvements.</p>
+    </section>
     <div class="controls" id="controls">
       <div class="seg" id="gran"></div>
       <button class="btn" id="exp-series" title="Télécharger cette série en CSV">CSV série</button>
@@ -1141,52 +1175,46 @@ function exportSeries(){
 }
 function buildNav(){
   const nav=document.getElementById("nav"); nav.innerHTML="";
+  // Accueil : la demarche / l'exercice
+  const home=document.createElement("button"); home.className="item home"; home.id="nav-home";
+  home.innerHTML=`<span class="ilab">La démarche</span>`;
+  home.onclick=()=>selectMission();
+  nav.appendChild(home);
+  // Sections du dispositif informationnel : uniquement les donnees disponibles
   for(const sec of TAXO){
     const wrap=document.createElement("div"); wrap.className="section";
     const hd=document.createElement("button"); hd.className="section-hd";
     hd.innerHTML=`<span class="chev">▼</span><span>${sec.section}</span>`;
     hd.onclick=()=>wrap.classList.toggle("collapsed");
     const body=document.createElement("div"); body.className="section-body";
-
-    // On separe les rubriques Disponibles (avec donnees) des rubriques A venir.
-    const avail=[], soon=[];
-    for(const topic of sec.topics){ (topic.ids && topic.ids.length ? avail : soon).push(topic); }
-
-    if(avail.length){
-      const h=document.createElement("div"); h.className="navcat"; h.textContent="Disponibles"; body.appendChild(h);
-      for(const topic of avail) for(const id of topic.ids){
+    const seen=new Set();
+    for(const topic of sec.topics){
+      if(!(topic.ids && topic.ids.length)) continue;
+      for(const id of topic.ids){
+        if(seen.has(id)) continue; seen.add(id);
         const b=document.createElement("button"); b.className="item"; b.dataset.id=id;
         b.innerHTML=`<span class="dotstat on"></span><span class="ilab">${DATA[id].name}</span>`;
         b.onclick=()=>selectSeries(id, topic.source);
         body.appendChild(b);
       }
     }
-    if(soon.length){
-      const h=document.createElement("div"); h.className="navcat soon"; h.textContent="À venir"; body.appendChild(h);
-      for(const topic of soon){
-        const b=document.createElement("button"); b.className="item pending"; b.dataset.ph=topic.name;
-        b.innerHTML=`<span class="dotstat off"></span><span class="ilab">${topic.name}</span>`;
-        b.onclick=()=>selectPlaceholder(topic);
-        body.appendChild(b);
-      }
-    }
-    wrap.appendChild(hd); wrap.appendChild(body); nav.appendChild(wrap);
+    if(body.children.length){ wrap.appendChild(hd); wrap.appendChild(body); nav.appendChild(wrap); }
   }
 }
 function syncNav(){
-  document.querySelectorAll(".item").forEach(b=>b.classList.toggle("active", b.dataset.id===state.id && state.id!=null));
+  document.querySelectorAll(".item[data-id]").forEach(b=>b.classList.toggle("active", b.dataset.id===state.id && state.id!=null));
+  const home=document.getElementById("nav-home"); if(home) home.classList.toggle("active", state.id==null);
 }
 function showChartUI(on){
-  for(const el of ["controls","cmpbar","card","stats-hd","stats","statstable","ana-hd","analysis","foot"]) document.getElementById(el).style.display = on?"":"none";
-  document.getElementById("placeholder").style.display = on?"none":"block";
+  for(const el of ["definition","controls","cmpbar","card","stats-hd","stats","statstable","ana-hd","analysis","foot"]) document.getElementById(el).style.display = on?"":"none";
+  document.getElementById("mission").style.display = on?"none":"block";
 }
 function selectSeries(id, source){ state.id=id; state.source=source; syncNav(); refresh(); }
-function selectPlaceholder(topic){
+function selectMission(){
   state.id=null; syncNav();
-  document.getElementById("title").textContent=topic.name;
+  document.getElementById("title").textContent="";
   document.getElementById("unit").textContent="";
-  document.getElementById("source").textContent="Source : "+topic.source;
-  document.getElementById("ph-src").textContent=topic.source;
+  document.getElementById("source").textContent="";
   showChartUI(false);
 }
 // Granularites autorisees selon la frequence NATIVE de la serie
@@ -1205,7 +1233,8 @@ function refresh(){
   document.getElementById("title").textContent=m.name;
   document.getElementById("unit").textContent=m.unit;
   document.getElementById("source").textContent = state.source ? ("Source : "+state.source) : "";
-  document.getElementById("foot").textContent = "Survole un point pour la date et la valeur exacte. " + (m.note || "");
+  document.getElementById("def-text").textContent = m.note || "";
+  document.getElementById("foot").textContent = "Survole un point pour lire la date et la valeur exacte.";
   showChartUI(true);
   buildGran();
   draw();
@@ -1248,8 +1277,7 @@ chart.addEventListener("pointermove",onMove);
 chart.addEventListener("pointerleave",onLeave);
 window.addEventListener("resize",()=>RENDER&&draw());
 
-state.source = TAXO[0].topics[0].source;   // source de la 1re rubrique (international)
-buildNav(); syncNav(); refresh();
+buildNav(); selectMission();   // on ouvre sur la page "La démarche"
 </script>
 </body>
 </html>
