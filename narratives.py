@@ -534,4 +534,28 @@ NARRATIVES = {
         "milliards** en 2025), reflet d'un stock de dette croissant et de la remontée des taux. Pour "
         "BAM, un déficit large et une dette qui coûte cher pèsent sur les taux longs et sur la marge de "
         "manœuvre de la politique économique.",
+    "directeur":
+        "Le taux directeur de Bank Al-Maghrib, c'est-à-dire le taux auquel elle refinance les banques. "
+        "C'est l'instrument de la politique monétaire, et donc la variable que ce projet cherche à "
+        "anticiper : à chaque réunion trimestrielle du Conseil, BAM décide de le monter, le baisser ou "
+        "le laisser inchangé. Reconstruit ici en escalier depuis l'historique officiel des décisions.\n\n"
+        "**Le long plateau (2006-2011).** Le taux reste à **3,25 %** pendant cinq ans, avec un unique "
+        "aller-retour (montée à 3,50 % à l'été 2008 face à l'inflation d'avant-crise, retour à 3,25 % "
+        "début 2009). BAM bouge peu et par petits pas.\n\n"
+        "**La longue détente (2012-2016).** Baisse graduelle : 3,00 % en 2012, puis 2,75 % et 2,50 % en "
+        "2014, enfin **2,25 %** en 2016, un plancher qui tiendra quatre ans. Inflation faible et "
+        "croissance molle justifient un biais accommodant.\n\n"
+        "**Le choc Covid (2020).** Deux baisses rapprochées, à 2,00 % en mars puis **1,50 %** en juin "
+        "2020, un plus bas historique pour soutenir l'économie confinée.\n\n"
+        "**Le resserrement anti-inflation (2022-2023).** Face à la flambée des prix, BAM remonte de "
+        "1,50 % à 2,00 % (sept. 2022), 2,50 % (déc. 2022) puis **3,00 %** (mars 2023), trois hausses "
+        "consécutives, le cycle le plus rapide de la série.\n\n"
+        "**La détente récente (2024).** Une fois l'inflation refluée, trois baisses ramènent le taux à "
+        "**2,25 %** fin 2024, niveau tenu depuis.\n\n"
+        "**Ce que ça dit pour le modèle.** Sur environ **80 réunions depuis 2006, seules ~14 ont donné "
+        "un mouvement** (4 hausses, 10 baisses) ; tout le reste est du statu quo. La cible est donc "
+        "très déséquilibrée : prédire « statu quo » est juste la plupart du temps, et la vraie "
+        "difficulté est d'anticiper les rares moments où BAM bouge. Compare une donnée à cette courbe "
+        "(via l'outil « Comparer » et la corrélation) pour repérer les inputs qui accompagnent le mieux "
+        "les décisions.",
 }

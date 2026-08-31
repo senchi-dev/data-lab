@@ -32,6 +32,7 @@ OUTPUT_GAP_FILE = DATADIR / "Output_gap.csv"
 DEPOTS_FILE = DATADIR / "Depots_terme.csv"
 TAUX_DEB_FILE = DATADIR / "Taux_debiteurs.xlsx"   # ancien fichier 2010-2017
 ICM_FILE = DATADIR / "ICM_HCP.csv"
+DECISIONS_FILE = DATADIR / "Decisions_BAM.csv"
 EMC_FILE = DATADIR / "EMC_series.xlsx"
 IPIEM_FILE = DATADIR / "IPIEM_base2015.csv"
 FIN_PUB_FILE = DATADIR / "Finances_publiques.csv"
@@ -344,6 +345,31 @@ def load_ipp():
     return out
 
 
+def load_directeur():
+    """Taux directeur BAM (Historique des decisions du Conseil). CSV date,taux -> serie mensuelle en escalier
+    (le taux prevaut jusqu'a la decision suivante), calee jusqu'au mois courant. Cle 'YYYY-MM'."""
+    import csv
+    from datetime import datetime
+    dec_by_ym = {}
+    with open(DECISIONS_FILE, encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            dec_by_ym[r["date"][:7]] = float(r["taux"])   # derniere decision du mois si plusieurs
+    first = min(dec_by_ym)
+    now = datetime.now()
+    y, m = int(first[:4]), int(first[5:7])
+    cur, out = None, {}
+    while (y, m) <= (now.year, now.month):
+        ym = f"{y:04d}-{m:02d}"
+        if ym in dec_by_ym:
+            cur = dec_by_ym[ym]
+        if cur is not None:
+            out[ym] = round(cur, 2)
+        m += 1
+        if m > 12:
+            m, y = 1, y + 1
+    return out
+
+
 def load_marche_travail():
     """Taux de chomage (I4249) et taux d'activite (I4250), agregat National/Ensemble, trimestriel 2006-2025 (HCP, ENE).
     Cle 'YYYY-MM' au mois median du trimestre."""
@@ -458,6 +484,7 @@ def load_taux_debiteurs():
 
 # Note affichee sous chaque graphe, specifique a la serie.
 NOTES = {
+    "directeur": "Taux directeur de Bank Al-Maghrib, le taux auquel elle prête aux banques : c'est l'instrument de la politique monétaire et la variable que le modèle cherche à anticiper. Série en escalier reconstruite depuis l'historique des décisions du Conseil (une réunion par trimestre) ; entre deux décisions, le taux reste inchangé. La décision se lit dans les variations : hausse, baisse, ou statu quo.",
     "bce": "Taux directeur BCE, niveau en fin de période (décision réelle, pas de 0,25 %). Refi (haut) vs dépôt (bas, devenu le vrai pilote depuis 2014).",
     "fed": "Cible de la Fed en fin de période. Cible unique jusqu'à déc. 2008, puis borne haute de la fourchette.",
     "infl_us": "Inflation US en glissement annuel (variation sur 12 mois de l'IPC).",
@@ -527,6 +554,13 @@ def build_data():
             print(f"{nom:<30} {label:<12} {len(pts)} mois  ({'+'.join(fids)}, {agg})")
         data[sid] = {"name": nom, "section": section, "group": groupe, "unit": unite,
                      "decimals": dec, "agg": agg, "freq": "M", "lines": lignes}
+
+    # --- Cible : taux directeur / decisions BAM ---
+    directeur = load_directeur()
+    data["directeur"] = {"name": "Taux directeur BAM (décisions du Conseil)", "section": "Décision de politique monétaire",
+                         "group": "Cible", "unit": "%", "decimals": 2, "agg": "eop", "freq": "M",
+                         "lines": [{"label": "Taux directeur", "color": ROUGE, "points": directeur}]}
+    print(f"{'Taux directeur BAM':<30} {'directeur':<12} {len(directeur)} mois  (Historique des décisions BAM)")
 
     # --- Sources nationales (fichiers locaux BAM) ---
     monia = load_monia()
@@ -689,6 +723,10 @@ def build_data():
 # Dispositif informationnel BAM : 3 grandes categories -> rubriques (chacune sa source).
 # "ids" = datasets deja disponibles (voir DATA). Rubrique sans ids = a collecter (placeholder).
 TAXONOMY = [
+    {"section": "Décision de politique monétaire (la cible)", "topics": [
+        {"name": "Taux directeur et décisions du Conseil",
+         "source": "Bank Al-Maghrib · Historique des décisions de politique monétaire", "ids": ["directeur"]},
+    ]},
     {"section": "Environnement international", "topics": [
         {"name": "Environnement international (croissance, emploi, inflation, marchés financiers, matières premières, décisions des banques centrales)",
          "source": "Réseau GPMN · FMI · Banque Mondiale · BRI · OCDE · FED · BCE · BoE",
