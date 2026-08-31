@@ -841,45 +841,55 @@ HTML = r"""<!doctype html>
   #source{ color:var(--muted); font-size:11.5px; margin-top:5px; }
   /* Accueil : la mission / l'exercice */
   #mission{ display:none; max-width:860px; }
-  #mission .m-kicker{ font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+  #corrpage{ display:none; max-width:900px; }
+  .ct-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:12px; margin:6px 0 20px; }
+  table.ct{ width:100%; border-collapse:collapse; font-size:13px; }
+  table.ct th, table.ct td{ padding:9px 12px; text-align:right; white-space:nowrap; }
+  table.ct th:first-child, table.ct td:first-child, table.ct th:nth-child(3), table.ct td:nth-child(3){ text-align:left; }
+  table.ct thead th{ background:var(--panel); color:var(--muted); font-weight:600; border-bottom:1px solid var(--line); }
+  table.ct tbody tr:nth-child(even){ background:var(--accent-soft); }
+  table.ct td.ct-rho{ font-weight:800; color:var(--accent); }
+  table.ct td.ct-name{ font-weight:600; color:var(--ink); }
+  .ct-rank{ color:var(--muted); font-weight:700; }
+  .m-kicker{ font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
         color:var(--accent); margin:18px 0 10px; }
-  #mission .m-title{ font-size:27px; line-height:1.2; margin:0 0 12px; color:var(--ink); }
-  #mission .m-lead{ font-size:15px; line-height:1.6; color:var(--muted); margin:0 0 26px; max-width:680px; }
-  #mission .m-steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
-  #mission .m-step{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px 18px 16px; }
-  #mission .m-num{ display:inline-block; font-size:13px; font-weight:800; color:var(--accent);
+  .m-title{ font-size:27px; line-height:1.2; margin:0 0 12px; color:var(--ink); }
+  .m-lead{ font-size:15px; line-height:1.6; color:var(--muted); margin:0 0 26px; max-width:680px; }
+  .m-steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+  .m-step{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px 18px 16px; }
+  .m-num{ display:inline-block; font-size:13px; font-weight:800; color:var(--accent);
         background:var(--accent-soft); border-radius:7px; padding:3px 9px; margin-bottom:10px; }
-  #mission .m-step b{ display:block; font-size:15px; color:var(--ink); margin-bottom:6px; }
-  #mission .m-step p{ font-size:13px; line-height:1.55; color:var(--muted); margin:0; }
-  #mission .m-source{ background:var(--accent-soft); border-left:3px solid var(--accent);
+  .m-step b{ display:block; font-size:15px; color:var(--ink); margin-bottom:6px; }
+  .m-step p{ font-size:13px; line-height:1.55; color:var(--muted); margin:0; }
+  .m-source{ background:var(--accent-soft); border-left:3px solid var(--accent);
         border-radius:0 12px 12px 0; padding:16px 18px; margin-bottom:18px; }
-  #mission .m-source-hd{ font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+  .m-source-hd{ font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
         color:var(--accent); margin-bottom:6px; }
-  #mission .m-source p{ font-size:13.5px; line-height:1.6; color:var(--ink); margin:0; }
-  #mission .m-source b, #mission .m-step b b{ color:var(--ink); }
-  #mission .m-doc{ display:flex; align-items:center; gap:14px; text-decoration:none;
+  .m-source p{ font-size:13.5px; line-height:1.6; color:var(--ink); margin:0; }
+  .m-source b, .m-step b b{ color:var(--ink); }
+  .m-doc{ display:flex; align-items:center; gap:14px; text-decoration:none;
         background:var(--panel); border:1.5px solid var(--accent); border-radius:14px;
         padding:14px 18px; margin-bottom:22px; transition:box-shadow .15s, transform .1s; }
-  #mission .m-doc:hover{ box-shadow:0 4px 16px rgba(37,99,168,.18); transform:translateY(-1px); }
-  #mission .m-doc-ico{ flex:0 0 auto; font-size:12px; font-weight:800; letter-spacing:.05em;
+  .m-doc:hover{ box-shadow:0 4px 16px rgba(37,99,168,.18); transform:translateY(-1px); }
+  .m-doc-ico{ flex:0 0 auto; font-size:12px; font-weight:800; letter-spacing:.05em;
         color:#fff; background:var(--accent); border-radius:8px; padding:9px 11px; }
-  #mission .m-doc-txt{ flex:1; display:flex; flex-direction:column; gap:2px; }
-  #mission .m-doc-txt b{ font-size:14.5px; color:var(--ink); }
-  #mission .m-doc-txt span{ font-size:12.5px; color:var(--muted); }
-  #mission .m-doc-cta{ flex:0 0 auto; font-size:13px; font-weight:700; color:var(--accent); }
-  #mission .m-notes{ border-top:1px solid var(--line); padding-top:16px; margin-bottom:18px; }
-  #mission .m-notes-hd{ font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+  .m-doc-txt{ flex:1; display:flex; flex-direction:column; gap:2px; }
+  .m-doc-txt b{ font-size:14.5px; color:var(--ink); }
+  .m-doc-txt span{ font-size:12.5px; color:var(--muted); }
+  .m-doc-cta{ flex:0 0 auto; font-size:13px; font-weight:700; color:var(--accent); }
+  .m-notes{ border-top:1px solid var(--line); padding-top:16px; margin-bottom:18px; }
+  .m-notes-hd{ font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
         color:var(--muted); margin-bottom:10px; }
-  #mission .m-notes ul{ margin:0; padding-left:18px; }
-  #mission .m-notes li{ font-size:13px; line-height:1.6; color:var(--ink); margin-bottom:10px; }
-  #mission .m-notes li b{ color:var(--ink); }
-  #mission .m-notes a{ color:var(--accent); }
-  #mission .m-hint{ font-size:12.5px; color:var(--muted); font-style:italic; margin:0; }
-  #mission .m-credit{ margin-top:26px; padding-top:14px; border-top:1px solid var(--line);
+  .m-notes ul{ margin:0; padding-left:18px; }
+  .m-notes li{ font-size:13px; line-height:1.6; color:var(--ink); margin-bottom:10px; }
+  .m-notes li b{ color:var(--ink); }
+  .m-notes a{ color:var(--accent); }
+  .m-hint{ font-size:12.5px; color:var(--muted); font-style:italic; margin:0; }
+  .m-credit{ margin-top:26px; padding-top:14px; border-top:1px solid var(--line);
         font-size:12px; color:var(--muted); }
-  #mission .m-credit .b-bmce{ font-size:12px; font-weight:800; }
-  #mission .m-credit .b-mkt2{ font-size:10px; font-weight:600; letter-spacing:.2em; color:var(--bmce-grey); }
-  @media (max-width:760px){ #mission .m-steps{ grid-template-columns:1fr; } }
+  .m-credit .b-bmce{ font-size:12px; font-weight:800; }
+  .m-credit .b-mkt2{ font-size:10px; font-weight:600; letter-spacing:.2em; color:var(--bmce-grey); }
+  @media (max-width:760px){ .m-steps{ grid-template-columns:1fr; } }
   /* Définition (avant le graphe) */
   #definition{ background:var(--accent-soft); border-radius:12px; padding:4px 18px 14px; margin:16px 0 4px; }
   #definition .sec-hd{ margin:14px 0 6px; }
@@ -991,6 +1001,25 @@ HTML = r"""<!doctype html>
       <p class="m-hint">Choisis une donnée dans le menu de gauche pour voir sa définition, ses statistiques et l'analyse de ses mouvements.</p>
       <div class="m-credit"><span class="b-bmce">BMCE CAPITAL</span> <span class="b-mkt2">MARKETS</span> · Data Lab</div>
     </section>
+    <section id="corrpage">
+      <div class="m-kicker">Analyse</div>
+      <h2 class="m-title">Ce qui discrimine les décisions de BAM</h2>
+      <p class="m-lead" id="corr-lead"></p>
+      <div id="corr-table"></div>
+      <div class="m-source">
+        <div class="m-source-hd">Méthode</div>
+        <p>Chaque input est échantillonné à la date de chaque réunion du Conseil, en prenant sa valeur du <b>mois précédent</b> (point-in-time : on n'utilise que ce qui était connu à la décision). On teste le niveau et la variation sur 12 mois, on garde la transformation la plus discriminante, et on mesure la <b>corrélation de Spearman</b> avec la décision signée (hausse +1, statu quo 0, baisse -1). Les trois dernières colonnes donnent la valeur moyenne de l'input selon la décision effectivement prise : un bon input a des moyennes bien séparées entre hausse et baisse.</p>
+      </div>
+      <div class="m-notes">
+        <div class="m-notes-hd">Limites</div>
+        <ul>
+          <li>C'est un <b>filtre</b>, pas le modèle : une corrélation élevée ne prouve pas la causalité et ne suffit pas à prédire.</li>
+          <li><b>Petit échantillon</b> : seulement <span id="corr-nmoves"></span> mouvements sur la période. Les corrélations sont instables, surtout pour les séries à faible n (colonne n).</li>
+          <li>Deux inputs peuvent être corrélés à la décision <b>et entre eux</b> (ex. inflation globale et sous-jacente) : dans un modèle, ils ne comptent qu'une fois.</li>
+          <li>Le signe doit être cohérent avec la théorie (inflation ou choc externe en hausse va avec les hausses de taux). Un signe inversé est suspect.</li>
+        </ul>
+      </div>
+    </section>
     <div class="controls" id="controls">
       <div class="seg" id="gran"></div>
       <button class="btn" id="exp-series" title="Télécharger cette série en CSV">CSV série</button>
@@ -1029,6 +1058,7 @@ HTML = r"""<!doctype html>
 <script>
 const DATA = __DATA__;
 const TAXO = __TAXO__;
+const CORR = __CORR__;
 const NS = "http://www.w3.org/2000/svg";
 const M = {l:58, r:22, t:22, b:34}, W=960, H=440;
 const state = { id:Object.keys(DATA)[0], gran:"M", source:"", transform:"level", compareId:null, compareMode:"overlay" };
@@ -1278,6 +1308,10 @@ function buildNav(){
   home.innerHTML=`<span class="ilab">La démarche</span>`;
   home.onclick=()=>selectMission();
   nav.appendChild(home);
+  const corr=document.createElement("button"); corr.className="item home"; corr.id="nav-corr";
+  corr.innerHTML=`<span class="ilab">Ce qui prédit les décisions</span>`;
+  corr.onclick=()=>selectCorr();
+  nav.appendChild(corr);
   // Sections du dispositif informationnel : uniquement les donnees disponibles
   for(const sec of TAXO){
     const wrap=document.createElement("div"); wrap.className="section";
@@ -1301,19 +1335,53 @@ function buildNav(){
 }
 function syncNav(){
   document.querySelectorAll(".item[data-id]").forEach(b=>b.classList.toggle("active", b.dataset.id===state.id && state.id!=null));
-  const home=document.getElementById("nav-home"); if(home) home.classList.toggle("active", state.id==null);
+  const home=document.getElementById("nav-home"); if(home) home.classList.toggle("active", state.view==="mission");
+  const corr=document.getElementById("nav-corr"); if(corr) corr.classList.toggle("active", state.view==="corr");
 }
-function showChartUI(on){
-  for(const el of ["definition","controls","cmpbar","card","stats-hd","stats","statstable","ana-hd","analysis","foot"]) document.getElementById(el).style.display = on?"":"none";
-  document.getElementById("mission").style.display = on?"none":"block";
+function showView(view){   // "mission" | "corr" | "series"
+  document.getElementById("mission").style.display = view==="mission"?"block":"none";
+  document.getElementById("corrpage").style.display = view==="corr"?"block":"none";
+  for(const el of ["definition","controls","cmpbar","card","stats-hd","stats","statstable","ana-hd","analysis","foot"]) document.getElementById(el).style.display = view==="series"?"":"none";
 }
-function selectSeries(id, source){ state.id=id; state.source=source; syncNav(); refresh(); }
+function selectSeries(id, source){ state.id=id; state.source=source; state.view="series"; syncNav(); refresh(); }
 function selectMission(){
-  state.id=null; syncNav();
+  state.id=null; state.view="mission"; syncNav();
   document.getElementById("title").textContent="";
   document.getElementById("unit").textContent="";
   document.getElementById("source").textContent="";
-  showChartUI(false);
+  showView("mission");
+}
+function selectCorr(){
+  state.id=null; state.view="corr"; syncNav();
+  document.getElementById("title").textContent="";
+  document.getElementById("unit").textContent="";
+  document.getElementById("source").textContent="";
+  renderCorrPage();
+  showView("corr");
+}
+function renderCorrPage(){
+  const nf=(x,d)=>x==null?"n.d.":x.toLocaleString("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d});
+  document.getElementById("corr-lead").textContent =
+    `Classement des inputs par leur pouvoir à discriminer les décisions du Conseil (${CORR.n_meetings} réunions depuis 2006, dont ${CORR.n_moves} mouvements). Plus la corrélation est forte et plus les moyennes conditionnelles sont séparées, plus l'input accompagne les décisions.`;
+  document.getElementById("corr-nmoves").textContent = CORR.n_moves;
+  const rows=CORR.rows.map((r,i)=>{
+    const d = r.decimals;
+    return `<tr>
+      <td class="ct-rank">${i+1}</td>
+      <td class="ct-name">${r.name}</td>
+      <td>${r.transform}</td>
+      <td class="ct-rho">${nf(r.rho,2)}</td>
+      <td>${r.n}</td>
+      <td>${nf(r.hausse,d)}</td>
+      <td>${nf(r.statuquo,d)}</td>
+      <td>${nf(r.baisse,d)}</td>
+    </tr>`;
+  }).join("");
+  document.getElementById("corr-table").innerHTML =
+    `<div class="ct-wrap"><table class="ct"><thead><tr>
+      <th>#</th><th>Input</th><th>Transformation</th><th>ρ Spearman</th><th>n</th>
+      <th>Moy. si hausse</th><th>Moy. si statu quo</th><th>Moy. si baisse</th>
+    </tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 // Granularites autorisees selon la frequence NATIVE de la serie
 const GRAN_LABEL = {M:"Mensuel", Q:"Trimestriel", Y:"Annuel"};
@@ -1333,7 +1401,7 @@ function refresh(){
   document.getElementById("source").textContent = state.source ? ("Source : "+state.source) : "";
   document.getElementById("def-text").textContent = m.note || "";
   document.getElementById("foot").textContent = "Survole un point pour lire la date et la valeur exacte.";
-  showChartUI(true);
+  showView("series");
   buildGran();
   draw();
   renderStats();
@@ -1422,12 +1490,80 @@ def write_features(data):
     print(f"features.csv : {len(months)} mois x {len(cols)} colonnes")
 
 
+# Inputs classes dans l'analyse de discrimination des decisions : (id dataset, label de courbe ou None)
+CORR_INPUTS = [
+    ("inflation", "Inflation globale"), ("inflation", "Sous-jacente (core)"), ("pib", None),
+    ("output_gap_q", None), ("tuc", None), ("monia", None), ("m3", "M3"), ("brent", None),
+    ("eurusd", None), ("bce", "Depot"), ("fed", None), ("infl_ze", None), ("infl_us", None),
+    ("food", None), ("gepu", None), ("commerce", "Solde commercial"),
+    ("travail", "Taux de chômage"), ("debiteurs", "Taux global"), ("capi", None),
+]
+
+
+def analyze_decisions(data):
+    """Classe les inputs par pouvoir de discrimination des decisions BAM. Pour chaque input, echantillonne
+    a la date de reunion (valeur du mois precedent = point-in-time), teste niveau et variation sur 12 mois,
+    garde la meilleure transformation, corrige de Spearman avec la decision signee (+1 hausse, 0 statu quo,
+    -1 baisse), et donne la moyenne conditionnelle par type de decision."""
+    import csv as _csv
+    import math
+    rows = [(r["date"], float(r["taux"])) for r in _csv.DictReader(open(DECISIONS_FILE, encoding="utf-8"))]
+    rows.sort()
+    meetings = [(rows[i][0][:7], int(np.sign(rows[i][1] - rows[i - 1][1]))) for i in range(1, len(rows))]
+    dec = [d for _, d in meetings]
+
+    def monthly_ff(points):
+        s = pd.Series({pd.Period(k, "M"): v for k, v in points.items()}).sort_index()
+        idx = pd.period_range(s.index.min(), s.index.max(), freq="M")
+        return s.reindex(idx).ffill()
+
+    def val_at(s, ym, lag=1):
+        return s.get(pd.Period(ym, "M") - lag, np.nan)
+
+    def spear(a, b):
+        a, b = pd.Series(a), pd.Series(b)
+        m = a.notna() & b.notna()
+        if m.sum() < 8:
+            return float("nan"), int(m.sum())
+        return round(float(a[m].corr(b[m], method="spearman")), 2), int(m.sum())
+
+    out = []
+    for did, lab in CORR_INPUTS:
+        ds = data.get(did)
+        if not ds:
+            continue
+        line = (next((L for L in ds["lines"] if L["label"] == lab), None) if lab
+                else max(ds["lines"], key=lambda L: len(L["points"])))
+        if not line:
+            continue
+        s = monthly_ff(line["points"])
+        lvl = [val_at(s, ym) for ym, _ in meetings]
+        dlt = [val_at(s, ym) - val_at(s, ym, 13) for ym, _ in meetings]
+        r_lvl, n = spear(lvl, dec)
+        r_dlt, _ = spear(dlt, dec)
+        if not math.isnan(r_dlt) and (math.isnan(r_lvl) or abs(r_dlt) >= abs(r_lvl)):
+            tname, r, vals = "Δ 1 an", r_dlt, dlt
+        else:
+            tname, r, vals = "Niveau", r_lvl, lvl
+        if math.isnan(r):
+            continue
+        dfc = pd.DataFrame({"v": vals, "d": dec}).dropna()
+        cond = lambda k: (round(float(dfc[dfc.d == k].v.mean()), 2) if (dfc.d == k).any() else None)
+        out.append({"name": ds["name"] + (f" ({lab})" if lab else ""), "transform": tname,
+                    "rho": r, "n": n, "hausse": cond(1), "statuquo": cond(0), "baisse": cond(-1),
+                    "unit": ds["unit"], "decimals": ds["decimals"]})
+    out.sort(key=lambda x: abs(x["rho"]), reverse=True)
+    n_moves = sum(1 for _, d in meetings if d != 0)
+    return {"rows": out, "n_meetings": len(meetings), "n_moves": n_moves}
+
+
 def main():
     DEST.mkdir(parents=True, exist_ok=True)
     data = build_data()
     html = (HTML
             .replace("__DATA__", json.dumps(data, ensure_ascii=False))
-            .replace("__TAXO__", json.dumps(TAXONOMY, ensure_ascii=False)))
+            .replace("__TAXO__", json.dumps(TAXONOMY, ensure_ascii=False))
+            .replace("__CORR__", json.dumps(analyze_decisions(data), ensure_ascii=False)))
     FICHIER.write_text(html, encoding="utf-8")
     write_features(data)
     # Documents servis en telechargement depuis la page "La demarche".
