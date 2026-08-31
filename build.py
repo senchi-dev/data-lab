@@ -44,7 +44,7 @@ DEBUT = "2006-01-01"
 DEST = ROOT / "public"
 FICHIER = DEST / "index.html"
 
-BLEU, ORANGE, VERT = "#2563a8", "#e07b39", "#2e9e6b"
+BLEU, ORANGE, VERT = "#123e8b", "#e07b39", "#2e9e6b"   # BLEU = bleu BMCE Capital
 ROUGE, VIOLET = "#c0392b", "#7c5cbf"
 
 # id -> (nom, SECTION, groupe, unite, decimales, agg, courbes)
@@ -782,15 +782,19 @@ HTML = r"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Data Lab</title>
+<title>Data Lab · BMCE Capital Markets</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23123e8b'/%3E%3Ctext x='16' y='22' font-family='Arial,sans-serif' font-size='16' font-weight='bold' fill='white' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#123e8b">
 <style>
   :root{
     --bg:#f6f7f9; --panel:#ffffff; --ink:#1a1d21; --muted:#6b7280;
-    --line:#e6e8eb; --accent:#2563a8; --accent-soft:#eaf1f9;
+    --line:#e6e8eb; --accent:#123e8b; --accent-soft:#e9eef8;
+    --bmce:#123e8b; --bmce-grey:#7e8184;
   }
   @media (prefers-color-scheme: dark){
     :root{ --bg:#14171b; --panel:#1c2026; --ink:#e8eaed; --muted:#9aa2ad;
-           --line:#2b3038; --accent:#5b9bd5; --accent-soft:#22303f; }
+           --line:#2b3038; --accent:#5e8ed6; --accent-soft:#1b2740;
+           --bmce:#7ea3e0; --bmce-grey:#9aa2ad; }
   }
   *{ box-sizing:border-box; }
   body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -798,8 +802,19 @@ HTML = r"""<!doctype html>
   .app{ display:grid; grid-template-columns:288px 1fr; height:100vh; }
   aside{ background:var(--panel); border-right:1px solid var(--line); padding:22px 16px;
          overflow-y:auto; min-height:0; }
-  aside h1{ font-size:15px; letter-spacing:.02em; margin:0 4px 4px; }
-  aside .sub{ font-size:11.5px; color:var(--muted); margin:0 4px 18px; }
+  .brand{ margin:0 4px 14px; }
+  .brand-mark{ display:flex; align-items:center; gap:9px; }
+  .b-txt{ display:flex; flex-direction:column; line-height:1; }
+  .b-bmce{ font-size:17px; font-weight:800; letter-spacing:.005em; color:var(--bmce); }
+  .b-mkt{ font-size:9.5px; font-weight:600; letter-spacing:.34em; color:var(--bmce-grey);
+        align-self:flex-end; margin-top:4px; margin-right:1px; }
+  .b-sphere{ width:22px; height:22px; border-radius:50%; flex:0 0 auto; position:relative; overflow:hidden;
+        background:radial-gradient(circle at 34% 28%, #ffffff 0%, #dbe2ec 46%, #a9b4c4 100%); }
+  .b-sphere::after{ content:""; position:absolute; right:-6px; bottom:-8px; width:20px; height:20px;
+        border-radius:50%; background:var(--bmce); transform:rotate(18deg); }
+  .brand-product{ margin-top:11px; font-size:15px; font-weight:700; letter-spacing:.01em; color:var(--ink);
+        border-top:1px solid var(--line); padding-top:11px; }
+  aside .sub{ font-size:11.5px; color:var(--muted); margin:6px 4px 18px; }
   .section-hd{ display:flex; align-items:center; gap:8px; width:100%; border:0; cursor:pointer;
         background:transparent; color:var(--ink); font-size:12.5px; font-weight:700;
         letter-spacing:.03em; text-transform:uppercase; padding:11px 8px; border-radius:9px;
@@ -860,6 +875,10 @@ HTML = r"""<!doctype html>
   #mission .m-notes li b{ color:var(--ink); }
   #mission .m-notes a{ color:var(--accent); }
   #mission .m-hint{ font-size:12.5px; color:var(--muted); font-style:italic; margin:0; }
+  #mission .m-credit{ margin-top:26px; padding-top:14px; border-top:1px solid var(--line);
+        font-size:12px; color:var(--muted); }
+  #mission .m-credit .b-bmce{ font-size:12px; font-weight:800; }
+  #mission .m-credit .b-mkt2{ font-size:10px; font-weight:600; letter-spacing:.2em; color:var(--bmce-grey); }
   @media (max-width:760px){ #mission .m-steps{ grid-template-columns:1fr; } }
   /* Définition (avant le graphe) */
   #definition{ background:var(--accent-soft); border-radius:12px; padding:4px 18px 14px; margin:16px 0 4px; }
@@ -918,7 +937,13 @@ HTML = r"""<!doctype html>
 <body>
 <div class="app">
   <aside>
-    <h1>Data Lab</h1>
+    <div class="brand">
+      <div class="brand-mark">
+        <span class="b-txt"><span class="b-bmce">BMCE CAPITAL</span><span class="b-mkt">MARKETS</span></span>
+        <span class="b-sphere"></span>
+      </div>
+      <div class="brand-product">Data Lab</div>
+    </div>
     <p class="sub">Les inputs de la décision de Bank Al-Maghrib · définitions, statistiques et analyse des mouvements</p>
     <nav id="nav"></nav>
   </aside>
@@ -964,6 +989,7 @@ HTML = r"""<!doctype html>
         </ul>
       </div>
       <p class="m-hint">Choisis une donnée dans le menu de gauche pour voir sa définition, ses statistiques et l'analyse de ses mouvements.</p>
+      <div class="m-credit"><span class="b-bmce">BMCE CAPITAL</span> <span class="b-mkt2">MARKETS</span> · Data Lab</div>
     </section>
     <div class="controls" id="controls">
       <div class="seg" id="gran"></div>
