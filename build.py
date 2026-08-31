@@ -1525,8 +1525,7 @@ def analyze_decisions(data):
         m = a.notna() & b.notna()
         if m.sum() < 8:
             return float("nan"), int(m.sum())
-        # Spearman = Pearson sur les rangs (evite la dependance scipy)
-        return round(float(a[m].rank().corr(b[m].rank())), 2), int(m.sum())
+        return round(float(a[m].corr(b[m], method="spearman")), 2), int(m.sum())
 
     out = []
     for did, lab in CORR_INPUTS:
