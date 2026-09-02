@@ -1468,6 +1468,7 @@ function renderMission(){
           <li><b>Output gap reconstruit.</b> L'output gap n'est pas publié pour le Maroc. Je l'ai reconstruit selon les <b>trois méthodes du document de travail de Bank Al-Maghrib</b> (<a href="ref-output-gap-chafik-bam-2017.pdf" target="_blank" rel="noopener">Chafik, 2017</a>) : le filtre de Hodrick-Prescott, la fonction de production de Cobb-Douglas, et le modèle semi-structurel de Blagrave et al. (2015). Deux études marocaines détaillent chacune une de ces méthodes : le filtre HP (<a href="ref-output-gap-hp.pdf" target="_blank" rel="noopener">Bassite &amp; El Khattab</a>) et la fonction de production (<a href="ref-output-gap-fonction-production.pdf" target="_blank" rel="noopener">Hefnaoui &amp; Charfi, 2024</a>). C'est une estimation, pas une mesure directe.</li>
           <li><b>Le choix des inputs reste à consolider.</b> La sélection s'appuie pour l'instant sur une logique économique (retenir ce qui cause ou anticipe l'inflation à deux ans, écarter ce qui confirme trop tard ou fait doublon). Ce que je veux surtout comprendre, c'est comment Bank Al-Maghrib elle-même sélectionne et hiérarchise ses propres inputs.</li>
           <li><b>Sourcing primaire.</b> Chaque donnée a été récupérée directement à la source citée dans le Dispositif informationnel de BAM (HCP, Office des Changes, Bank Al-Maghrib, TGR, ainsi que FRED et le FMI pour l'environnement international), et non via des agrégateurs tiers.</li>
+          <li><b>Construit avec l'IA comme coach.</b> Ce site (recherche de sources, code, mise en forme) est réalisé avec l'aide de Claude, utilisé comme coach et facilitateur technique. Je n'aurais pas pu construire seul la partie technique. Les choix de fond, eux, restent les miens : quels inputs, quelles sources, quelles limites signaler.</li>
         </ul>
       </div>
       <p class="m-hint">Choisis une donnée dans le menu de gauche pour voir sa définition, ses statistiques et l'analyse de ses mouvements.</p>` : `
@@ -1491,6 +1492,7 @@ function renderMission(){
           <li><b>Output gap, reconstructed.</b> The output gap is not published for Morocco. I reconstructed it following the <b>three methods of Bank Al-Maghrib's working paper</b> (<a href="ref-output-gap-chafik-bam-2017.pdf" target="_blank" rel="noopener">Chafik, 2017</a>): the Hodrick-Prescott filter, the Cobb-Douglas production function, and the semi-structural model of Blagrave et al. (2015). Two Moroccan studies each detail one of these methods: the HP filter (<a href="ref-output-gap-hp.pdf" target="_blank" rel="noopener">Bassite &amp; El Khattab</a>) and the production function (<a href="ref-output-gap-fonction-production.pdf" target="_blank" rel="noopener">Hefnaoui &amp; Charfi, 2024</a>). This is an estimate, not a direct measurement.</li>
           <li><b>The choice of inputs is still a work in progress.</b> The selection currently rests on economic reasoning (keep what causes or anticipates inflation two years out, drop what confirms too late or duplicates). What I most want to understand is how Bank Al-Maghrib itself selects and ranks its own inputs.</li>
           <li><b>Primary sourcing.</b> Every data point was pulled directly from the source cited in BAM's Information Framework (HCP, Office des Changes, Bank Al-Maghrib, TGR, plus FRED and the IMF for the international environment), never from third-party aggregators.</li>
+          <li><b>Built with AI as a coach.</b> This site (sourcing, code, formatting) is made with the help of Claude, used as a coach and technical facilitator. I could not have built the technical side on my own. The substantive choices remain mine: which inputs, which sources, which limitations to flag.</li>
         </ul>
       </div>
       <p class="m-hint">Pick a series from the left-hand menu to see its definition, statistics and the analysis of its moves.</p>`;
@@ -1506,10 +1508,11 @@ function renderSupervisor(){
       <div class="m-source">
         <div class="m-source-hd">Le contexte</div>
         <p>Ce Data Lab est le livrable de l'exercice que vous m'avez confié sur le desk Rates de BMCE Capital Markets : « choisir les inputs de la décision de politique monétaire de Bank Al-Maghrib ». Il documente chaque étape, de la donnée brute jusqu'à l'analyse, pour que le raisonnement soit vérifiable de bout en bout.</p>
+        <p><b>À savoir avant de le lire :</b> ce site est construit avec l'aide de Claude (IA), utilisé comme coach et facilitateur technique, pour le sourcing des données et le code du site. Je n'aurais pas pu construire seul cette partie technique. C'est un projet où j'apprends activement, pas une démonstration de compétences techniques que je maîtriserais déjà seul.</p>
       </div>
       <div class="m-steps">
         <div class="m-step"><span class="m-num">1</span><b>Ce qu'on m'a demandé</b><p>Choisir les inputs, aller chercher la donnée à la source, puis analyser les mouvements avec des statistiques descriptives et le contexte macro.</p></div>
-        <div class="m-step"><span class="m-num">2</span><b>Comment j'ai procédé</b><p>Le périmètre suit le Dispositif informationnel de BAM ligne par ligne. Chaque série est sourcée directement (HCP, BAM, Office des Changes, TGR, FRED, FMI), jamais via un agrégateur.</p></div>
+        <div class="m-step"><span class="m-num">2</span><b>Comment j'ai procédé</b><p>Le périmètre suit le Dispositif informationnel de BAM ligne par ligne. Chaque série est sourcée directement (HCP, BAM, Office des Changes, TGR, FRED, FMI), jamais via un agrégateur. Le choix des inputs et leur justification sont miens ; l'IA m'a aidé à trouver, extraire et coder les données.</p></div>
         <div class="m-step"><span class="m-num">3</span><b>Ce qui reste ouvert</b><p>Trois points sont signalés explicitement sur la page « La démarche » : la reconstruction de l'output gap, le choix des inputs encore à consolider, et le sourcing primaire. Je veux en discuter avec vous.</p></div>
       </div>
       <a class="m-cta" href="#" onclick="selectMission();return false;">Ouvrir la page « La démarche » ▸</a>
@@ -1525,10 +1528,11 @@ function renderSupervisor(){
       <div class="m-source">
         <div class="m-source-hd">Context</div>
         <p>This Data Lab is the deliverable for the exercise assigned to me on the Rates desk at BMCE Capital Markets: "choose the inputs behind Bank Al-Maghrib's monetary policy decision." It documents every step, from raw data to analysis, so the reasoning can be checked end to end.</p>
+        <p><b>Worth knowing before reading on:</b> this site is built with the help of Claude (AI), used as a coach and technical facilitator, for data sourcing and the site's code. I could not have built this technical side on my own. This is a project I am actively learning from, not a showcase of technical skills I already master solo.</p>
       </div>
       <div class="m-steps">
         <div class="m-step"><span class="m-num">1</span><b>What I was asked</b><p>Choose the inputs, source the data directly, then analyse the moves with descriptive statistics and macro context.</p></div>
-        <div class="m-step"><span class="m-num">2</span><b>How I went about it</b><p>The scope follows BAM's Information Framework line by line. Every series is sourced directly (HCP, BAM, Office des Changes, TGR, FRED, IMF), never through an aggregator.</p></div>
+        <div class="m-step"><span class="m-num">2</span><b>How I went about it</b><p>The scope follows BAM's Information Framework line by line. Every series is sourced directly (HCP, BAM, Office des Changes, TGR, FRED, IMF), never through an aggregator. The choice of inputs and their justification are mine; the AI helped me find, extract and code the data.</p></div>
         <div class="m-step"><span class="m-num">3</span><b>What is still open</b><p>Three points are flagged explicitly on the "Approach" page: the output-gap reconstruction, the input selection still being consolidated, and primary sourcing. I want to discuss these with you.</p></div>
       </div>
       <a class="m-cta" href="#" onclick="selectMission();return false;">Open the "Approach" page ▸</a>
@@ -1549,50 +1553,52 @@ function renderSupervisor(){
 }
 function renderRecruiters(){
   const fr = LANG!=="en";
-  const badgesFr = ["Python","pandas / NumPy","APIs HCP, BAM, FRED, FMI, TGR","SVG fait main (zéro dépendance)","GitHub Actions (refresh quotidien)","GitHub Pages"];
-  const badgesEn = ["Python","pandas / NumPy","HCP, BAM, FRED, IMF, TGR APIs","hand-built SVG (zero dependency)","GitHub Actions (daily refresh)","GitHub Pages"];
+  const badgesFr = ["Claude (IA, coach technique)","Python","pandas / NumPy","APIs HCP, BAM, FRED, FMI, TGR","GitHub Actions (refresh quotidien)","GitHub Pages"];
+  const badgesEn = ["Claude (AI, technical coach)","Python","pandas / NumPy","HCP, BAM, FRED, IMF, TGR APIs","GitHub Actions (daily refresh)","GitHub Pages"];
   const badges = (fr?badgesFr:badgesEn).map(b=>`<span class="m-badge">${b}</span>`).join("");
   const body = fr ? `
+      <div class="m-source">
+        <div class="m-source-hd">À lire avant tout : comment c'est fait</div>
+        <p>Ce site est construit avec l'aide de Claude (Anthropic), utilisé comme <b>coach et facilitateur technique</b> : recherche des sources, écriture du code du site, mise en forme des données. Je n'aurais pas pu construire seul la partie technique (le code, le pipeline de données). C'est un <b>projet où j'apprends</b>, pas une démonstration de maîtrise technique solo.</p>
+        <p>Ce que je fais moi-même : cadrer le problème, choisir et justifier les inputs, décider quelles sources aller chercher, vérifier chaque donnée et chaque affirmation, et diriger l'outil IA avec exigence plutôt que de lui laisser décider à ma place.</p>
+      </div>
       <div class="m-steps">
-        <div class="m-step"><span class="m-num">1</span><b>Un vrai problème, pas un exercice jouet</b><p>Anticiper les décisions de taux de Bank Al-Maghrib : cadrage théorique (fonction de réaction), sourcing de données primaires, et discipline de modélisation (point-in-time, walk-forward, limites assumées).</p></div>
-        <div class="m-step"><span class="m-num">2</span><b>Construit de bout en bout, seul</b><p>Ingestion de plus de 25 séries depuis des sources primaires (API HCP, fichiers BAM, FRED, TGR, annuaires), moteur de graphes SVG écrit à la main, déploiement automatisé.</p></div>
-        <div class="m-step"><span class="m-num">3</span><b>Rigueur assumée sur les limites</b><p>Chaque série a une définition complète et, quand c'est pertinent, ses limites explicitement signalées (biais de fin d'échantillon, données provisoires, ruptures de série).</p></div>
+        <div class="m-step"><span class="m-num">1</span><b>Un vrai sujet macro</b><p>Anticiper les décisions de taux de Bank Al-Maghrib : un problème avec une vraie littérature (fonction de réaction, output gap) et de vraies contraintes de données, pas un exercice jouet.</p></div>
+        <div class="m-step"><span class="m-num">2</span><b>Sourcing exigeant</b><p>Plus de 25 séries récupérées sur des sources primaires (API HCP, fichiers BAM, FRED, TGR, annuaires), jamais via des agrégateurs, avec vérification systématique.</p></div>
+        <div class="m-step"><span class="m-num">3</span><b>Honnêteté sur les limites</b><p>Chaque série a une définition complète et, quand c'est pertinent, ses limites explicitement signalées. Idem pour la méthode : ce qui est solide, ce qui reste à consolider.</p></div>
       </div>
       <div class="m-badges">${badges}</div>
-      <div class="m-source">
-        <div class="m-source-hd">Ce que ça montre</div>
-        <p>Ingénierie de données sur sources primaires (pas d'agrégateurs), raisonnement macroéconomique appliqué à une vraie banque centrale, un produit construit et déployé de zéro, et une communication écrite bilingue pensée pour deux publics différents (un maître de stage, un recruteur).</p>
-      </div>
       <a class="m-cta" href="#" onclick="selectMission();return false;">Explorer les données ▸</a>
       <div class="m-notes">
         <div class="m-notes-hd">À propos</div>
         <ul>
-          <li>Construit par Marwane Benaddi, étudiant à l'EDHEC Business School (BBA2), pendant un stage de finance de marché sur le desk Rates de BMCE Capital Markets.</li>
-          <li>La suite du projet : un modèle d'anticipation des décisions BAM (régression logistique multinomiale, validation walk-forward) construit sur cette base de données.</li>
+          <li>Marwane Benaddi, étudiant à l'EDHEC Business School (BBA2), pendant un stage de finance de marché sur le desk Rates de BMCE Capital Markets.</li>
+          <li>La suite envisagée : explorer, toujours avec l'IA en coach, un modèle d'anticipation des décisions BAM. Ce n'est pas encore construit, et je serai transparent sur ce qui est de moi et ce qui vient de l'outil.</li>
         </ul>
       </div>` : `
+      <div class="m-source">
+        <div class="m-source-hd">Read this first: how it was made</div>
+        <p>This site is built with the help of Claude (Anthropic), used as a <b>coach and technical facilitator</b>: sourcing the data, writing the site's code, formatting the data. I could not have built the technical side (the code, the data pipeline) on my own. This is a <b>project I am learning from</b>, not a solo technical-mastery showcase.</p>
+        <p>What I do myself: frame the problem, choose and justify the inputs, decide which sources to go find, verify every data point and every claim, and direct the AI tool with rigour rather than let it decide for me.</p>
+      </div>
       <div class="m-steps">
-        <div class="m-step"><span class="m-num">1</span><b>A real problem, not a toy exercise</b><p>Anticipating Bank Al-Maghrib's rate decisions: theoretical framing (the central bank's reaction function), primary-source data sourcing, and modelling discipline (point-in-time, walk-forward, limitations owned up front).</p></div>
-        <div class="m-step"><span class="m-num">2</span><b>Built end to end, solo</b><p>Ingested 25+ series from primary sources (HCP API, BAM files, FRED, TGR, yearbooks), a hand-written SVG charting engine, automated deployment.</p></div>
-        <div class="m-step"><span class="m-num">3</span><b>Rigour about the limits</b><p>Every series carries a complete definition and, where relevant, its limitations flagged explicitly (end-of-sample bias, provisional data, series breaks).</p></div>
+        <div class="m-step"><span class="m-num">1</span><b>A real macro subject</b><p>Anticipating Bank Al-Maghrib's rate decisions: a problem with a real literature (reaction function, output gap) and real data constraints, not a toy exercise.</p></div>
+        <div class="m-step"><span class="m-num">2</span><b>Demanding sourcing</b><p>25+ series pulled from primary sources (HCP API, BAM files, FRED, TGR, yearbooks), never through aggregators, with systematic verification.</p></div>
+        <div class="m-step"><span class="m-num">3</span><b>Honesty about limits</b><p>Every series carries a complete definition and, where relevant, its limitations flagged explicitly. Same for the method: what is solid, what is still a work in progress.</p></div>
       </div>
       <div class="m-badges">${badges}</div>
-      <div class="m-source">
-        <div class="m-source-hd">What it demonstrates</div>
-        <p>Primary-source data engineering (no aggregators), macroeconomic reasoning applied to a real central bank, a product built and deployed from scratch, and bilingual written communication designed for two different audiences (a supervisor, a recruiter).</p>
-      </div>
       <a class="m-cta" href="#" onclick="selectMission();return false;">Explore the data ▸</a>
       <div class="m-notes">
         <div class="m-notes-hd">About</div>
         <ul>
-          <li>Built by Marwane Benaddi, EDHEC Business School student (BBA2), during a financial markets internship on the Rates desk at BMCE Capital Markets.</li>
-          <li>Next up: an actual anticipation model for BAM's decisions (multinomial logistic regression, walk-forward validation) built on top of this database.</li>
+          <li>Marwane Benaddi, EDHEC Business School student (BBA2), during a financial markets internship on the Rates desk at BMCE Capital Markets.</li>
+          <li>Possible next step: exploring, still with AI as a coach, a model to anticipate BAM's decisions. It is not built yet, and I will be transparent about what is mine and what comes from the tool.</li>
         </ul>
       </div>`;
   document.getElementById("recruiters").innerHTML = pageShell(
-    fr?"POUR LES RECRUTEURS":"FOR RECRUITERS",
-    fr?"Un cas pratique vivant de macro appliquée et de data engineering":"A live case study in applied macro and data engineering",
-    fr?"Ce que ce projet montre, en trois minutes de lecture.":"What this project demonstrates, in three minutes.",
+    fr?"RECRUTEMENT":"RECRUITING",
+    fr?"Un projet d'apprentissage en macro appliquée, construit avec l'IA":"A learning project in applied macro, built with AI",
+    fr?"Ce que ce projet montre, et comment il a vraiment été fait.":"What this project shows, and how it was actually made.",
     body);
 }
 function setLang(lang){
