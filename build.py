@@ -17,6 +17,9 @@ import requests
 
 from stats import compute_stats
 from narratives import NARRATIVES
+from narratives_en import NARRATIVES_EN
+from i18n_data import (SECTION_EN, GROUP_EN, UNIT_EN, NAME_EN, LABEL_EN, NOTES_EN,
+                        TOPIC_NAME_EN, TOPIC_SOURCE_EN)
 
 # Cle FRED : variable d'environnement (Vercel / GitHub Actions) sinon config locale (dev, gitignoree).
 API_KEY = os.environ.get("FRED_API_KEY")
@@ -44,7 +47,7 @@ DEBUT = "2006-01-01"
 DEST = ROOT / "public"
 FICHIER = DEST / "index.html"
 
-BLEU, ORANGE, VERT = "#123e8b", "#e07b39", "#2e9e6b"   # BLEU = bleu BMCE Capital
+BLEU, ORANGE, VERT = "#2563a8", "#e07b39", "#2e9e6b"
 ROUGE, VIOLET = "#c0392b", "#7c5cbf"
 
 # id -> (nom, SECTION, groupe, unite, decimales, agg, courbes)
@@ -778,23 +781,22 @@ TAXONOMY = [
 
 
 HTML = r"""<!doctype html>
-<html lang="fr">
+<html lang="fr" id="htmlroot">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Data Lab · BMCE Capital Markets</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23123e8b'/%3E%3Ctext x='16' y='22' font-family='Arial,sans-serif' font-size='16' font-weight='bold' fill='white' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E">
-<meta name="theme-color" content="#123e8b">
+<title>Data Lab</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232f3742'/%3E%3Ctext x='16' y='21' font-family='Arial,sans-serif' font-size='14' font-weight='bold' fill='white' text-anchor='middle'%3EDL%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#2563a8">
+<meta name="description" content="Data Lab, an independent research tool tracking the inputs behind Bank Al-Maghrib's monetary policy decisions.">
 <style>
   :root{
     --bg:#f6f7f9; --panel:#ffffff; --ink:#1a1d21; --muted:#6b7280;
-    --line:#e6e8eb; --accent:#123e8b; --accent-soft:#e9eef8;
-    --bmce:#123e8b; --bmce-grey:#7e8184;
+    --line:#e6e8eb; --accent:#2563a8; --accent-soft:#eaf1f9;
   }
   @media (prefers-color-scheme: dark){
     :root{ --bg:#14171b; --panel:#1c2026; --ink:#e8eaed; --muted:#9aa2ad;
-           --line:#2b3038; --accent:#5e8ed6; --accent-soft:#1b2740;
-           --bmce:#7ea3e0; --bmce-grey:#9aa2ad; }
+           --line:#2b3038; --accent:#5b9bd5; --accent-soft:#22303f; }
   }
   *{ box-sizing:border-box; }
   body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -802,18 +804,13 @@ HTML = r"""<!doctype html>
   .app{ display:grid; grid-template-columns:288px 1fr; height:100vh; }
   aside{ background:var(--panel); border-right:1px solid var(--line); padding:22px 16px;
          overflow-y:auto; min-height:0; }
-  .brand{ margin:0 4px 14px; }
-  .brand-mark{ display:flex; align-items:center; gap:9px; }
-  .b-txt{ display:flex; flex-direction:column; line-height:1; }
-  .b-bmce{ font-size:17px; font-weight:800; letter-spacing:.005em; color:var(--bmce); }
-  .b-mkt{ font-size:9.5px; font-weight:600; letter-spacing:.34em; color:var(--bmce-grey);
-        align-self:flex-end; margin-top:4px; margin-right:1px; }
-  .b-sphere{ width:22px; height:22px; border-radius:50%; flex:0 0 auto; position:relative; overflow:hidden;
-        background:radial-gradient(circle at 34% 28%, #ffffff 0%, #dbe2ec 46%, #a9b4c4 100%); }
-  .b-sphere::after{ content:""; position:absolute; right:-6px; bottom:-8px; width:20px; height:20px;
-        border-radius:50%; background:var(--bmce); transform:rotate(18deg); }
-  .brand-product{ margin-top:11px; font-size:15px; font-weight:700; letter-spacing:.01em; color:var(--ink);
-        border-top:1px solid var(--line); padding-top:11px; }
+  .brand{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 4px 4px; }
+  .brand-word{ font-size:16px; font-weight:800; letter-spacing:-.01em; color:var(--ink); }
+  .langtoggle{ display:inline-flex; background:var(--bg); border:1px solid var(--line);
+        border-radius:8px; overflow:hidden; flex:0 0 auto; }
+  .langtoggle button{ border:0; background:transparent; color:var(--muted); font-size:11px;
+        font-weight:700; letter-spacing:.03em; padding:5px 9px; cursor:pointer; }
+  .langtoggle button.on{ background:var(--accent); color:#fff; }
   aside .sub{ font-size:11.5px; color:var(--muted); margin:6px 4px 18px; }
   .section-hd{ display:flex; align-items:center; gap:8px; width:100%; border:0; cursor:pointer;
         background:transparent; color:var(--ink); font-size:12.5px; font-weight:700;
@@ -840,46 +837,50 @@ HTML = r"""<!doctype html>
   .ilab{ flex:1; }
   #source{ color:var(--muted); font-size:11.5px; margin-top:5px; }
   /* Accueil : la mission / l'exercice */
-  #mission{ display:none; max-width:860px; }
-  #mission .m-kicker{ font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+  .page{ display:none; max-width:860px; }
+  .page .m-kicker{ font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
         color:var(--accent); margin:18px 0 10px; }
-  #mission .m-title{ font-size:27px; line-height:1.2; margin:0 0 12px; color:var(--ink); }
-  #mission .m-lead{ font-size:15px; line-height:1.6; color:var(--muted); margin:0 0 26px; max-width:680px; }
-  #mission .m-steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
-  #mission .m-step{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px 18px 16px; }
-  #mission .m-num{ display:inline-block; font-size:13px; font-weight:800; color:var(--accent);
+  .page .m-title{ font-size:27px; line-height:1.2; margin:0 0 12px; color:var(--ink); }
+  .page .m-lead{ font-size:15px; line-height:1.6; color:var(--muted); margin:0 0 26px; max-width:680px; }
+  .page .m-steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+  .page .m-step{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px 18px 16px; }
+  .page .m-num{ display:inline-block; font-size:13px; font-weight:800; color:var(--accent);
         background:var(--accent-soft); border-radius:7px; padding:3px 9px; margin-bottom:10px; }
-  #mission .m-step b{ display:block; font-size:15px; color:var(--ink); margin-bottom:6px; }
-  #mission .m-step p{ font-size:13px; line-height:1.55; color:var(--muted); margin:0; }
-  #mission .m-source{ background:var(--accent-soft); border-left:3px solid var(--accent);
+  .page .m-step b{ display:block; font-size:15px; color:var(--ink); margin-bottom:6px; }
+  .page .m-step p{ font-size:13px; line-height:1.55; color:var(--muted); margin:0; }
+  .page .m-source{ background:var(--accent-soft); border-left:3px solid var(--accent);
         border-radius:0 12px 12px 0; padding:16px 18px; margin-bottom:18px; }
-  #mission .m-source-hd{ font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+  .page .m-source-hd{ font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
         color:var(--accent); margin-bottom:6px; }
-  #mission .m-source p{ font-size:13.5px; line-height:1.6; color:var(--ink); margin:0; }
-  #mission .m-source b, #mission .m-step b b{ color:var(--ink); }
-  #mission .m-doc{ display:flex; align-items:center; gap:14px; text-decoration:none;
+  .page .m-source p{ font-size:13.5px; line-height:1.6; color:var(--ink); margin:0 0 8px; }
+  .page .m-source p:last-child{ margin-bottom:0; }
+  .page .m-source b, .page .m-step b b{ color:var(--ink); }
+  .page .m-doc{ display:flex; align-items:center; gap:14px; text-decoration:none;
         background:var(--panel); border:1.5px solid var(--accent); border-radius:14px;
         padding:14px 18px; margin-bottom:22px; transition:box-shadow .15s, transform .1s; }
-  #mission .m-doc:hover{ box-shadow:0 4px 16px rgba(37,99,168,.18); transform:translateY(-1px); }
-  #mission .m-doc-ico{ flex:0 0 auto; font-size:12px; font-weight:800; letter-spacing:.05em;
+  .page .m-doc:hover{ box-shadow:0 4px 16px rgba(37,99,168,.18); transform:translateY(-1px); }
+  .page .m-doc-ico{ flex:0 0 auto; font-size:12px; font-weight:800; letter-spacing:.05em;
         color:#fff; background:var(--accent); border-radius:8px; padding:9px 11px; }
-  #mission .m-doc-txt{ flex:1; display:flex; flex-direction:column; gap:2px; }
-  #mission .m-doc-txt b{ font-size:14.5px; color:var(--ink); }
-  #mission .m-doc-txt span{ font-size:12.5px; color:var(--muted); }
-  #mission .m-doc-cta{ flex:0 0 auto; font-size:13px; font-weight:700; color:var(--accent); }
-  #mission .m-notes{ border-top:1px solid var(--line); padding-top:16px; margin-bottom:18px; }
-  #mission .m-notes-hd{ font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+  .page .m-doc-txt{ flex:1; display:flex; flex-direction:column; gap:2px; }
+  .page .m-doc-txt b{ font-size:14.5px; color:var(--ink); }
+  .page .m-doc-txt span{ font-size:12.5px; color:var(--muted); }
+  .page .m-doc-cta{ flex:0 0 auto; font-size:13px; font-weight:700; color:var(--accent); }
+  .page .m-notes{ border-top:1px solid var(--line); padding-top:16px; margin-bottom:18px; }
+  .page .m-notes-hd{ font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
         color:var(--muted); margin-bottom:10px; }
-  #mission .m-notes ul{ margin:0; padding-left:18px; }
-  #mission .m-notes li{ font-size:13px; line-height:1.6; color:var(--ink); margin-bottom:10px; }
-  #mission .m-notes li b{ color:var(--ink); }
-  #mission .m-notes a{ color:var(--accent); }
-  #mission .m-hint{ font-size:12.5px; color:var(--muted); font-style:italic; margin:0; }
-  #mission .m-credit{ margin-top:26px; padding-top:14px; border-top:1px solid var(--line);
-        font-size:12px; color:var(--muted); }
-  #mission .m-credit .b-bmce{ font-size:12px; font-weight:800; }
-  #mission .m-credit .b-mkt2{ font-size:10px; font-weight:600; letter-spacing:.2em; color:var(--bmce-grey); }
-  @media (max-width:760px){ #mission .m-steps{ grid-template-columns:1fr; } }
+  .page .m-notes ul{ margin:0; padding-left:18px; }
+  .page .m-notes li{ font-size:13px; line-height:1.6; color:var(--ink); margin-bottom:10px; }
+  .page .m-notes li b{ color:var(--ink); }
+  .page .m-notes a{ color:var(--accent); }
+  .page .m-hint{ font-size:12.5px; color:var(--muted); font-style:italic; margin:0; }
+  .page .m-badges{ display:flex; flex-wrap:wrap; gap:8px; margin:4px 0 22px; }
+  .page .m-badge{ font-size:12px; font-weight:600; color:var(--ink); background:var(--accent-soft);
+        border-radius:20px; padding:5px 12px; }
+  .page .m-cta{ display:inline-flex; align-items:center; gap:8px; background:var(--accent); color:#fff;
+        text-decoration:none; font-size:13.5px; font-weight:700; border-radius:10px; padding:11px 18px;
+        margin:4px 0 24px; }
+  .page .m-cta:hover{ opacity:.92; }
+  @media (max-width:760px){ .page .m-steps{ grid-template-columns:1fr; } }
   /* Définition (avant le graphe) */
   #definition{ background:var(--accent-soft); border-radius:12px; padding:4px 18px 14px; margin:16px 0 4px; }
   #definition .sec-hd{ margin:14px 0 6px; }
@@ -938,13 +939,13 @@ HTML = r"""<!doctype html>
 <div class="app">
   <aside>
     <div class="brand">
-      <div class="brand-mark">
-        <span class="b-txt"><span class="b-bmce">BMCE CAPITAL</span><span class="b-mkt">MARKETS</span></span>
-        <span class="b-sphere"></span>
+      <span class="brand-word">Data Lab</span>
+      <div class="langtoggle" id="langtoggle">
+        <button data-lang="fr">FR</button>
+        <button data-lang="en">EN</button>
       </div>
-      <div class="brand-product">Data Lab</div>
     </div>
-    <p class="sub">Les inputs de la décision de Bank Al-Maghrib · définitions, statistiques et analyse des mouvements</p>
+    <p class="sub" id="sidebar-sub"></p>
     <nav id="nav"></nav>
   </aside>
   <main>
@@ -956,59 +957,30 @@ HTML = r"""<!doctype html>
       <span class="unit" id="unit"></span>
     </div>
     <div id="definition">
-      <h3 class="sec-hd">Définition</h3>
+      <h3 class="sec-hd" id="def-hd"></h3>
       <p id="def-text"></p>
     </div>
-    <section id="mission">
-      <div class="m-kicker">L'exercice</div>
-      <h2 class="m-title">Les inputs de la décision de politique monétaire de Bank Al-Maghrib</h2>
-      <p class="m-lead">Construire la base de données qui alimente un modèle d'anticipation des décisions de taux de BAM (hausse, baisse ou statu quo). Trois étapes.</p>
-      <div class="m-steps">
-        <div class="m-step"><span class="m-num">01</span><b>Choisir les inputs</b><p>Sélectionner les indicateurs qui pèsent réellement sur la décision : ceux qui causent ou anticipent l'inflation à deux ans, et les canaux externes qui la pilotent au Maroc.</p></div>
-        <div class="m-step"><span class="m-num">02</span><b>Chercher la data</b><p>Sourcer chaque input sur des sources primaires. Le périmètre suit le <b>Dispositif informationnel de Bank Al-Maghrib</b>, le document officiel qui recense les sources que la Banque utilise pour élaborer ses prévisions.</p></div>
-        <div class="m-step"><span class="m-num">03</span><b>Analyser les mouvements</b><p>Pour chaque série : une définition complète, des statistiques descriptives, puis un commentaire des grands mouvements et de ce qui s'est passé dans le monde pour les provoquer.</p></div>
-      </div>
-      <div class="m-source">
-        <div class="m-source-hd">Le fil conducteur</div>
-        <p>Chaque rubrique de ce tableau de bord correspond à une ligne du <b>Dispositif informationnel de BAM</b>, organisé en trois blocs : environnement international, données monétaires et financières nationales, données économiques nationales. Ce document a servi à décider quoi chercher.</p>
-      </div>
-      <a class="m-doc" href="dispositif-informationnel-bam.pdf" target="_blank" rel="noopener">
-        <span class="m-doc-ico">PDF</span>
-        <span class="m-doc-txt">
-          <b>Dispositif informationnel de Bank Al-Maghrib</b>
-          <span>Le document officiel qui recense les sources utilisées par BAM. Cliquez pour l'ouvrir ou le télécharger.</span>
-        </span>
-        <span class="m-doc-cta">Ouvrir ▸</span>
-      </a>
-      <div class="m-notes">
-        <div class="m-notes-hd">Notes de méthode et limites</div>
-        <ul>
-          <li><b>Output gap reconstruit.</b> L'output gap n'est pas publié pour le Maroc. Je l'ai reconstruit selon les <b>trois méthodes du document de travail de Bank Al-Maghrib</b> (<a href="ref-output-gap-chafik-bam-2017.pdf" target="_blank" rel="noopener">Chafik, 2017</a>) : le filtre de Hodrick-Prescott, la fonction de production de Cobb-Douglas, et le modèle semi-structurel de Blagrave et al. (2015). Deux études marocaines détaillent chacune une de ces méthodes : le filtre HP (<a href="ref-output-gap-hp.pdf" target="_blank" rel="noopener">Bassite &amp; El Khattab</a>) et la fonction de production (<a href="ref-output-gap-fonction-production.pdf" target="_blank" rel="noopener">Hefnaoui &amp; Charfi, 2024</a>). C'est une estimation, pas une mesure directe.</li>
-          <li><b>Le choix des inputs reste à consolider.</b> La sélection s'appuie pour l'instant sur une logique économique (retenir ce qui cause ou anticipe l'inflation à deux ans, écarter ce qui confirme trop tard ou fait doublon). Ce que je veux surtout comprendre, c'est comment Bank Al-Maghrib elle-même sélectionne et hiérarchise ses propres inputs.</li>
-          <li><b>Sourcing primaire.</b> Chaque donnée a été récupérée directement à la source citée dans le Dispositif informationnel de BAM (HCP, Office des Changes, Bank Al-Maghrib, TGR, ainsi que FRED et le FMI pour l'environnement international), et non via des agrégateurs tiers.</li>
-        </ul>
-      </div>
-      <p class="m-hint">Choisis une donnée dans le menu de gauche pour voir sa définition, ses statistiques et l'analyse de ses mouvements.</p>
-      <div class="m-credit"><span class="b-bmce">BMCE CAPITAL</span> <span class="b-mkt2">MARKETS</span> · Data Lab</div>
-    </section>
+    <section id="mission" class="page"></section>
+    <section id="supervisor" class="page"></section>
+    <section id="recruiters" class="page"></section>
     <div class="controls" id="controls">
       <div class="seg" id="gran"></div>
-      <button class="btn" id="exp-series" title="Télécharger cette série en CSV">CSV série</button>
-      <a class="btn" id="exp-matrix" href="features.csv" download="data-lab-features.csv" title="Télécharger la matrice de features alignée au mensuel">Matrice (features)</a>
+      <button class="btn" id="exp-series"></button>
+      <a class="btn" id="exp-matrix" href="features.csv" download="data-lab-features.csv"></a>
     </div>
     <div class="controls" id="cmpbar">
-      <span class="ctl-lab">Transformer</span>
+      <span class="ctl-lab" id="lab-transform"></span>
       <div class="seg" id="tf">
-        <button data-t="level" class="on">Niveau</button>
-        <button data-t="yoy">Δ 1 an</button>
-        <button data-t="base100">Base 100</button>
-        <button data-t="zscore">Z-score</button>
+        <button data-t="level" class="on"></button>
+        <button data-t="yoy"></button>
+        <button data-t="base100"></button>
+        <button data-t="zscore"></button>
       </div>
-      <span class="ctl-lab">Comparer</span>
+      <span class="ctl-lab" id="lab-compare"></span>
       <select id="cmp" class="sel"></select>
       <div class="seg" id="cmpmode" style="display:none">
-        <button data-m="overlay" class="on">Superposer</button>
-        <button data-m="spread">Écart</button>
+        <button data-m="overlay" class="on"></button>
+        <button data-m="spread"></button>
       </div>
       <span id="corr" class="corr"></span>
     </div>
@@ -1016,26 +988,94 @@ HTML = r"""<!doctype html>
       <svg id="chart" viewBox="0 0 960 440" preserveAspectRatio="none"></svg>
       <div class="legend" id="legend"></div>
     </div>
-    <h3 class="sec-hd" id="stats-hd">Statistiques descriptives</h3>
+    <h3 class="sec-hd" id="stats-hd"></h3>
     <div class="stats" id="stats"></div>
     <div class="statstable" id="statstable"></div>
-    <h3 class="sec-hd" id="ana-hd">Analyse</h3>
+    <h3 class="sec-hd" id="ana-hd"></h3>
     <div id="analysis"></div>
-    <p class="foot" id="foot">Survole la courbe pour lire la date et la valeur exacte. Taux directeurs = niveau en fin de période (la décision réelle, en pas de 0,25 %). Prix, inflation et indices = moyenne de la période.</p>
+    <p class="foot" id="foot"></p>
   </main>
 </div>
 <div id="tip"></div>
 
 <script>
-const DATA = __DATA__;
-const TAXO = __TAXO__;
+const DATA_FR = __DATA__;
+const DATA_EN = __DATA_EN__;
+const TAXO_FR = __TAXO__;
+const TAXO_EN = __TAXO_EN__;
+let LANG = (function(){ try{ return localStorage.getItem("dl_lang")==="en" ? "en" : "fr"; }catch(e){ return "fr"; } })();
+function D(){ return LANG==="en" ? DATA_EN : DATA_FR; }
+function T(){ return LANG==="en" ? TAXO_EN : TAXO_FR; }
 const NS = "http://www.w3.org/2000/svg";
 const M = {l:58, r:22, t:22, b:34}, W=960, H=440;
-const state = { id:Object.keys(DATA)[0], gran:"M", source:"", transform:"level", compareId:null, compareMode:"overlay" };
+const state = { id:null, view:"mission", gran:"M", source:"", transform:"level", compareId:null, compareMode:"overlay" };
 const CMP_COLOR = "#8b5cf6";
 
+/* ---------- i18n (UI chrome) ---------- */
+const UI = {
+  sidebarSub: {fr:"Les inputs de la décision de Bank Al-Maghrib · définitions, statistiques et analyse des mouvements",
+               en:"The inputs behind Bank Al-Maghrib's rate decision · definitions, statistics and analysis of the moves"},
+  navHome: {fr:"La démarche", en:"The approach"},
+  navSupervisor: {fr:"Pour mon maître de stage", en:"For my supervisor"},
+  navRecruiters: {fr:"Pour les recruteurs", en:"For recruiters"},
+  definition: {fr:"Définition", en:"Definition"},
+  csvSeries: {fr:"CSV série", en:"Series CSV"},
+  csvSeriesTitle: {fr:"Télécharger cette série en CSV", en:"Download this series as CSV"},
+  matrix: {fr:"Matrice (features)", en:"Feature matrix"},
+  matrixTitle: {fr:"Télécharger la matrice de features alignée au mensuel", en:"Download the monthly-aligned feature matrix"},
+  transform: {fr:"Transformer", en:"Transform"},
+  tfLevel: {fr:"Niveau", en:"Level"},
+  tfYoy: {fr:"Δ 1 an", en:"Δ 1y"},
+  tfBase100: {fr:"Base 100", en:"Base 100"},
+  tfZscore: {fr:"Z-score", en:"Z-score"},
+  compare: {fr:"Comparer", en:"Compare"},
+  comparePh: {fr:"Comparer à…", en:"Compare to…"},
+  overlay: {fr:"Superposer", en:"Overlay"},
+  spread: {fr:"Écart", en:"Spread"},
+  corr: {fr:"corrélation r = ", en:"correlation r = "},
+  statsHd: {fr:"Statistiques descriptives", en:"Descriptive statistics"},
+  anaHd: {fr:"Analyse", en:"Analysis"},
+  statLast: {fr:"Dernier point", en:"Latest point"},
+  statMean: {fr:"Moyenne", en:"Mean"},
+  statOverPeriod: {fr:"sur la période", en:"over the period"},
+  statMedian: {fr:"Médiane", en:"Median"},
+  statStd: {fr:"Écart-type", en:"Std dev"},
+  statLevel: {fr:"niveau", en:"level"},
+  statMin: {fr:"Min", en:"Min"},
+  statMax: {fr:"Max", en:"Max"},
+  statVol: {fr:"Volatilité", en:"Volatility"},
+  statChanges: {fr:"variations", en:"changes"},
+  statObs: {fr:"Observations", en:"Observations"},
+  statPoints: {fr:"points", en:"points"},
+  thYear: {fr:"Année", en:"Year"},
+  thN: {fr:"n", en:"n"},
+  computedOn: {fr:"Calculées sur : ", en:"Computed on: "},
+  source: {fr:"Source : ", en:"Source: "},
+  footHover: {fr:"Survole un point pour lire la date et la valeur exacte.", en:"Hover a point to read the exact date and value."},
+  above: {fr:"au-dessus", en:"above"},
+  below: {fr:"en dessous", en:"below"},
+  freqM: {fr:"mensuels", en:"monthly"},
+  freqQ: {fr:"trimestriels", en:"quarterly"},
+  freqA: {fr:"annuels", en:"annual"},
+  freqPts: {fr:"points", en:"points"},
+  currentReading: {fr:"Lecture actuelle : dernier point à ", en:"Current reading: latest point at "},
+  ofItsMean: {fr:"de sa moyenne de ", en:"its mean of "},
+  amplitude: {fr:"amplitude ", en:"range "},
+  toStr: {fr:" à ", en:" to "},
+  onStr: {fr:" sur ", en:" over "},
+  spreadLabel: {fr:"Écart", en:"Spread"},
+  minusStr: {fr:" moins ", en:" minus "},
+  granM: {fr:"Mensuel", en:"Monthly"},
+  granQ: {fr:"Trimestriel", en:"Quarterly"},
+  granY: {fr:"Annuel", en:"Annual"},
+};
+function t(key){ return (UI[key] && UI[key][LANG]) || key; }
+
 /* ---------- agregation ---------- */
-const MONTHS = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+const MONTHS_FR = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+const MONTHS_EN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function MONTHS(){ return LANG==="en" ? MONTHS_EN : MONTHS_FR; }
+function locale(){ return LANG==="en" ? "en-US" : "fr-FR"; }
 function tOf(key){ // "YYYY-MM" -> ms
   const [y,m]=key.split("-").map(Number); return Date.UTC(y,m-1,1);
 }
@@ -1043,14 +1083,14 @@ function aggregate(points, gran, agg){
   const keys = Object.keys(points).sort();
   if(gran==="M"){
     return keys.map(k=>{const [y,m]=k.split("-").map(Number);
-      return {t:tOf(k), v:points[k], label:MONTHS[m-1]+" "+y};});
+      return {t:tOf(k), v:points[k], label:MONTHS()[m-1]+" "+y};});
   }
   const buckets = {};
   for(const k of keys){                       // keys triees ascendantes
     const [y,m]=k.split("-").map(Number);
     let bk, lab, t;
     if(gran==="Y"){ bk=""+y; lab=""+y; t=Date.UTC(y,6,1); }
-    else { const q=Math.floor((m-1)/3)+1; bk=y+"-Q"+q; lab="T"+q+" "+y; t=Date.UTC(y,(q-1)*3+1,1); }
+    else { const q=Math.floor((m-1)/3)+1; bk=y+"-Q"+q; lab=(LANG==="en"?"Q":"T")+q+" "+y; t=Date.UTC(y,(q-1)*3+1,1); }
     (buckets[bk]=buckets[bk]||{sum:0,n:0,last:null,lab,t});
     buckets[bk].sum+=points[k]; buckets[bk].n++; buckets[bk].last=points[k]; // last = dernier mois du bucket
   }
@@ -1067,7 +1107,7 @@ function niceTicks(min,max,n){
   for(let v=lo; v<=hi+1e-9; v+=s) out.push(+v.toFixed(6));
   return out;
 }
-function fmt(v){ const d=DATA[state.id].decimals; return v.toLocaleString("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function fmt(v){ const d=D()[state.id].decimals; return v.toLocaleString(locale(),{minimumFractionDigits:d,maximumFractionDigits:d}); }
 
 /* ---------- rendu ---------- */
 let RENDER = null;
@@ -1104,21 +1144,21 @@ function pearson(pairs){ const n=pairs.length; if(n<3) return null;
   return d ? cov/d : null; }
 function renderCorr(r){
   const el=document.getElementById("corr");
-  el.textContent = (r==null) ? "" : "corrélation r = " + r.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2});
+  el.textContent = (r==null) ? "" : t("corr") + r.toLocaleString(locale(),{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
 function draw(){
-  const meta=DATA[state.id];
+  const meta=D()[state.id];
   let series=meta.lines.map(L=>({label:L.label,color:L.color,pts:applyTransform(aggregate(L.points,state.gran,meta.agg),state.transform)}));
   // Comparaison a une 2e serie
   let corr=null;
-  const cmpId=(state.compareId && state.compareId!==state.id && DATA[state.compareId]) ? state.compareId : null;
+  const cmpId=(state.compareId && state.compareId!==state.id && D()[state.compareId]) ? state.compareId : null;
   if(cmpId){
-    const cm=DATA[cmpId], cmPts=cmpMainPts(cm);
+    const cm=D()[cmpId], cmPts=cmpMainPts(cm);
     const prMain=series.reduce((a,b)=>b.pts.length>a.pts.length?b:a);
     corr=pearson(alignPairs(prMain.pts, cmPts));
     if(state.compareMode==="spread"){
-      series=[{label:"Écart (" + meta.name + " moins " + cm.name + ")", color:CMP_COLOR, pts:spreadPts(prMain.pts, cmPts)}];
+      series=[{label:t("spreadLabel")+" (" + meta.name + t("minusStr") + cm.name + ")", color:CMP_COLOR, pts:spreadPts(prMain.pts, cmPts)}];
     } else {
       series=series.concat([{label:cm.name, color:CMP_COLOR, pts:cmPts, dashed:true}]);
     }
@@ -1178,44 +1218,44 @@ function buildLegend(series){
 }
 function labelOf(key){
   const [y,m]=key.split("-").map(Number);
-  const f=DATA[state.id].freq;
+  const f=D()[state.id].freq;
   if(f==="A") return ""+y;
-  if(f==="Q") return ({2:"T1",5:"T2",8:"T3",11:"T4"}[m]||"")+" "+y;
-  return MONTHS[m-1]+" "+y;
+  if(f==="Q") return ({2:LANG==="en"?"Q1":"T1",5:LANG==="en"?"Q2":"T2",8:LANG==="en"?"Q3":"T3",11:LANG==="en"?"Q4":"T4"}[m]||"")+" "+y;
+  return MONTHS()[m-1]+" "+y;
 }
-function fmtd(v,extra){ const d=DATA[state.id].decimals+(extra||0);
+function fmtd(v,extra){ const d=D()[state.id].decimals+(extra||0);
   let x=Number(v); if(Math.round(x*Math.pow(10,d))===0) x=0;   // évite l'affichage "-0,0"
-  return x.toLocaleString("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d}); }
+  return x.toLocaleString(locale(),{minimumFractionDigits:d,maximumFractionDigits:d}); }
 // Panneau de stats descriptives (calculees au build, frequence native ; independantes du toggle).
 function renderStats(){
-  const st=DATA[state.id].stats;
+  const st=D()[state.id].stats;
   const statsEl=document.getElementById("stats"), tblEl=document.getElementById("statstable");
   if(!st){ statsEl.innerHTML=""; tblEl.innerHTML=""; return; }
   const tile=(lab,val,sub)=>`<div class="stat">${lab}<b>${val}</b>${sub||""}</div>`;
   statsEl.innerHTML =
-    tile("Dernier point", fmtd(st.last.value), labelOf(st.last.key))+
-    tile("Moyenne", fmtd(st.mean), "sur la période")+
-    tile("Médiane", fmtd(st.median), "")+
-    tile("Écart-type", fmtd(st.std,1), "niveau")+
-    tile("Min", fmtd(st.min), "")+
-    tile("Max", fmtd(st.max), "")+
-    tile("Volatilité", fmtd(st.vol,1), "variations")+
-    tile("Observations", st.n, "points");
+    tile(t("statLast"), fmtd(st.last.value), labelOf(st.last.key))+
+    tile(t("statMean"), fmtd(st.mean), t("statOverPeriod"))+
+    tile(t("statMedian"), fmtd(st.median), "")+
+    tile(t("statStd"), fmtd(st.std,1), t("statLevel"))+
+    tile(t("statMin"), fmtd(st.min), "")+
+    tile(t("statMax"), fmtd(st.max), "")+
+    tile(t("statVol"), fmtd(st.vol,1), t("statChanges"))+
+    tile(t("statObs"), st.n, t("statPoints"));
   const rows=st.by_period.map(p=>
     `<tr><td>${p.period}</td><td>${p.n}</td><td>${fmtd(p.mean)}</td><td>${fmtd(p.min)}</td><td>${fmtd(p.max)}</td><td>${fmtd(p.vol,1)}</td></tr>`).join("");
-  const table=`<div class="tbl-wrap"><table><thead><tr><th>Année</th><th>n</th><th>Moyenne</th><th>Min</th><th>Max</th><th>Volatilité</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-  tblEl.innerHTML=(st.main_label?`<div class="tbl-note">Calculées sur : <b>${st.main_label}</b></div>`:"")+table;
+  const table=`<div class="tbl-wrap"><table><thead><tr><th>${t("thYear")}</th><th>${t("thN")}</th><th>${t("statMean")}</th><th>${t("statMin")}</th><th>${t("statMax")}</th><th>${t("statVol")}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  tblEl.innerHTML=(st.main_label?`<div class="tbl-note">${t("computedOn")}<b>${st.main_label}</b></div>`:"")+table;
 }
 function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 function mdBold(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>"); }
 // Section Analyse : phrase "lecture actuelle" auto (depuis les stats) + narratif redige a la main.
 function renderAnalysis(){
-  const m=DATA[state.id], st=m.stats, el=document.getElementById("analysis");
+  const m=D()[state.id], st=m.stats, el=document.getElementById("analysis");
   if(!st){ el.innerHTML=""; return; }
-  const pos = st.last.value>=st.mean ? "au-dessus" : "en dessous";
-  const freqLab = ({M:"mensuels",Q:"trimestriels",A:"annuels"})[m.freq]||"points";
-  const auto = `Lecture actuelle : dernier point à <b>${fmtd(st.last.value)}</b> (${labelOf(st.last.key)}), `
-    + `${pos} de sa moyenne de ${fmtd(st.mean)} ; amplitude ${fmtd(st.min)} à ${fmtd(st.max)} sur ${st.n} points ${freqLab}.`;
+  const pos = st.last.value>=st.mean ? t("above") : t("below");
+  const freqLab = ({M:t("freqM"),Q:t("freqQ"),A:t("freqA")})[m.freq]||t("freqPts");
+  const auto = `${t("currentReading")}<b>${fmtd(st.last.value)}</b> (${labelOf(st.last.key)}), `
+    + `${pos} ${t("ofItsMean")}${fmtd(st.mean)} ; ${t("amplitude")}${fmtd(st.min)}${t("toStr")}${fmtd(st.max)}${t("onStr")}${st.n} ${t("statPoints").toLowerCase()} ${freqLab}.`;
   const prose = m.narrative
     ? `<div class="prose">`+m.narrative.split(/\n\s*\n/).map(p=>`<p>${mdBold(p)}</p>`).join("")+`</div>`
     : "";
@@ -1264,22 +1304,22 @@ function download(name, text){
   a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 1000);
 }
 function exportSeries(){
-  const m=DATA[state.id];
+  const m=D()[state.id];
   const keys=[...new Set(m.lines.flatMap(L=>Object.keys(L.points)))].sort();
   const head=["Date", ...m.lines.map(L=>L.label)];
   const rows=[head.map(csvEsc).join(",")];
   for(const k of keys) rows.push([k, ...m.lines.map(L=>L.points[k]??"")].map(csvEsc).join(","));
-  download((state.id||"serie")+".csv", rows.join("\n"));
+  download((state.id||"series")+".csv", rows.join("\n"));
 }
 function buildNav(){
   const nav=document.getElementById("nav"); nav.innerHTML="";
-  // Accueil : la demarche / l'exercice
-  const home=document.createElement("button"); home.className="item home"; home.id="nav-home";
-  home.innerHTML=`<span class="ilab">La démarche</span>`;
-  home.onclick=()=>selectMission();
-  nav.appendChild(home);
+  const mk=(id,labelKey,onclick)=>{ const b=document.createElement("button"); b.className="item home"; b.id=id;
+    b.innerHTML=`<span class="ilab">${t(labelKey)}</span>`; b.onclick=onclick; return b; };
+  nav.appendChild(mk("nav-home","navHome",()=>selectMission()));
+  nav.appendChild(mk("nav-supervisor","navSupervisor",()=>selectSupervisor()));
+  nav.appendChild(mk("nav-recruiters","navRecruiters",()=>selectRecruiters()));
   // Sections du dispositif informationnel : uniquement les donnees disponibles
-  for(const sec of TAXO){
+  for(const sec of T()){
     const wrap=document.createElement("div"); wrap.className="section";
     const hd=document.createElement("button"); hd.className="section-hd";
     hd.innerHTML=`<span class="chev">▼</span><span>${sec.section}</span>`;
@@ -1291,7 +1331,7 @@ function buildNav(){
       for(const id of topic.ids){
         if(seen.has(id)) continue; seen.add(id);
         const b=document.createElement("button"); b.className="item"; b.dataset.id=id;
-        b.innerHTML=`<span class="dotstat on"></span><span class="ilab">${DATA[id].name}</span>`;
+        b.innerHTML=`<span class="dotstat on"></span><span class="ilab">${D()[id].name}</span>`;
         b.onclick=()=>selectSeries(id, topic.source);
         body.appendChild(b);
       }
@@ -1300,40 +1340,71 @@ function buildNav(){
   }
 }
 function syncNav(){
-  document.querySelectorAll(".item[data-id]").forEach(b=>b.classList.toggle("active", b.dataset.id===state.id && state.id!=null));
-  const home=document.getElementById("nav-home"); if(home) home.classList.toggle("active", state.id==null);
+  document.querySelectorAll(".item[data-id]").forEach(b=>b.classList.toggle("active", b.dataset.id===state.id && state.view==="series"));
+  const map={mission:"nav-home", supervisor:"nav-supervisor", recruiters:"nav-recruiters"};
+  for(const v in map){ const el=document.getElementById(map[v]); if(el) el.classList.toggle("active", state.view===v); }
 }
-function showChartUI(on){
-  for(const el of ["definition","controls","cmpbar","card","stats-hd","stats","statstable","ana-hd","analysis","foot"]) document.getElementById(el).style.display = on?"":"none";
-  document.getElementById("mission").style.display = on?"none":"block";
+function showView(view){   // "mission" | "supervisor" | "recruiters" | "series"
+  document.getElementById("mission").style.display = view==="mission"?"block":"none";
+  document.getElementById("supervisor").style.display = view==="supervisor"?"block":"none";
+  document.getElementById("recruiters").style.display = view==="recruiters"?"block":"none";
+  for(const el of ["definition","controls","cmpbar","card","stats-hd","stats","statstable","ana-hd","analysis","foot"])
+    document.getElementById(el).style.display = view==="series"?"":"none";
 }
-function selectSeries(id, source){ state.id=id; state.source=source; syncNav(); refresh(); }
-function selectMission(){
-  state.id=null; syncNav();
+function clearHead(){
   document.getElementById("title").textContent="";
   document.getElementById("unit").textContent="";
   document.getElementById("source").textContent="";
-  showChartUI(false);
 }
+function selectSeries(id, source){ state.id=id; state.source=source; state.view="series"; syncNav(); refresh(); }
+function selectMission(){ state.view="mission"; syncNav(); clearHead(); renderMission(); showView("mission"); }
+function selectSupervisor(){ state.view="supervisor"; syncNav(); clearHead(); renderSupervisor(); showView("supervisor"); }
+function selectRecruiters(){ state.view="recruiters"; syncNav(); clearHead(); renderRecruiters(); showView("recruiters"); }
 // Granularites autorisees selon la frequence NATIVE de la serie
-const GRAN_LABEL = {M:"Mensuel", Q:"Trimestriel", Y:"Annuel"};
 const FREQ_GRANS = { M:["M","Q","Y"], Q:["Q","Y"], A:["Y"] };
 function buildGran(){
-  const allowed = FREQ_GRANS[DATA[state.id].freq] || ["M","Q","Y"];
+  const allowed = FREQ_GRANS[D()[state.id].freq] || ["M","Q","Y"];
   if(!allowed.includes(state.gran)) state.gran = allowed[0];   // retombe sur la vue la plus fine dispo
+  const GRAN_LABEL = {M:t("granM"), Q:t("granQ"), Y:t("granY")};
   document.getElementById("gran").innerHTML =
     allowed.map(g=>`<button data-g="${g}" class="${g===state.gran?'on':''}">${GRAN_LABEL[g]}</button>`).join("");
   // un seul choix (serie annuelle) : on masque le toggle, inutile
   document.getElementById("gran").style.display = allowed.length>1 ? "" : "none";
 }
+function applyChromeText(){
+  document.getElementById("sidebar-sub").textContent = t("sidebarSub");
+  document.getElementById("def-hd").textContent = t("definition");
+  document.getElementById("exp-series").textContent = t("csvSeries");
+  document.getElementById("exp-series").title = t("csvSeriesTitle");
+  document.getElementById("exp-matrix").textContent = t("matrix");
+  document.getElementById("exp-matrix").title = t("matrixTitle");
+  document.getElementById("lab-transform").textContent = t("transform");
+  document.getElementById("lab-compare").textContent = t("compare");
+  document.querySelector('#tf button[data-t="level"]').textContent = t("tfLevel");
+  document.querySelector('#tf button[data-t="yoy"]').textContent = t("tfYoy");
+  document.querySelector('#tf button[data-t="base100"]').textContent = t("tfBase100");
+  document.querySelector('#tf button[data-t="zscore"]').textContent = t("tfZscore");
+  document.querySelector('#cmpmode button[data-m="overlay"]').textContent = t("overlay");
+  document.querySelector('#cmpmode button[data-m="spread"]').textContent = t("spread");
+  document.getElementById("stats-hd").textContent = t("statsHd");
+  document.getElementById("ana-hd").textContent = t("anaHd");
+  populateCompareMenu();
+  document.querySelectorAll(".langtoggle button").forEach(b=>b.classList.toggle("on", b.dataset.lang===LANG));
+  document.getElementById("htmlroot").lang = LANG;
+}
+function populateCompareMenu(){
+  let html=`<option value="">${t("comparePh")}</option>`;
+  for(const id in D()) html+=`<option value="${id}" ${id===state.compareId?"selected":""}>${D()[id].name}</option>`;
+  document.getElementById("cmp").innerHTML=html;
+}
 function refresh(){
-  const m=DATA[state.id];
+  const m=D()[state.id];
   document.getElementById("title").textContent=m.name;
   document.getElementById("unit").textContent=m.unit;
-  document.getElementById("source").textContent = state.source ? ("Source : "+state.source) : "";
+  document.getElementById("source").textContent = state.source ? (t("source")+state.source) : "";
   document.getElementById("def-text").textContent = m.note || "";
-  document.getElementById("foot").textContent = "Survole un point pour lire la date et la valeur exacte.";
-  showChartUI(true);
+  document.getElementById("foot").textContent = t("footHover");
+  showView("series");
   buildGran();
   draw();
   renderStats();
@@ -1347,12 +1418,6 @@ document.getElementById("gran").addEventListener("click",e=>{
   draw();
 });
 document.getElementById("exp-series").onclick=exportSeries;
-// Menu Comparer : peuplé avec toutes les séries disponibles
-(function(){
-  let html='<option value="">Comparer à…</option>';
-  for(const id in DATA) html+=`<option value="${id}">${DATA[id].name}</option>`;
-  document.getElementById("cmp").innerHTML=html;
-})();
 document.getElementById("tf").addEventListener("click",e=>{
   const b=e.target.closest("button[data-t]"); if(!b) return;
   state.transform=b.dataset.t;
@@ -1375,6 +1440,177 @@ chart.addEventListener("pointermove",onMove);
 chart.addEventListener("pointerleave",onLeave);
 window.addEventListener("resize",()=>RENDER&&draw());
 
+/* ---------- pages : la demarche / superviseur / recruteurs ---------- */
+function pageShell(kicker,title,lead,bodyHtml){
+  return `<div class="m-kicker">${kicker}</div><h2 class="m-title">${title}</h2>`
+       + (lead?`<p class="m-lead">${lead}</p>`:"") + bodyHtml;
+}
+function renderMission(){
+  const fr = LANG!=="en";
+  const body = fr ? `
+      <div class="m-steps">
+        <div class="m-step"><span class="m-num">01</span><b>Choisir les inputs</b><p>Sélectionner les indicateurs qui pèsent réellement sur la décision : ceux qui causent ou anticipent l'inflation à deux ans, et les canaux externes qui la pilotent au Maroc.</p></div>
+        <div class="m-step"><span class="m-num">02</span><b>Chercher la data</b><p>Sourcer chaque input sur des sources primaires. Le périmètre suit le <b>Dispositif informationnel de Bank Al-Maghrib</b>, le document officiel qui recense les sources que la Banque utilise pour élaborer ses prévisions.</p></div>
+        <div class="m-step"><span class="m-num">03</span><b>Analyser les mouvements</b><p>Pour chaque série : une définition complète, des statistiques descriptives, puis un commentaire des grands mouvements et de ce qui s'est passé dans le monde pour les provoquer.</p></div>
+      </div>
+      <div class="m-source">
+        <div class="m-source-hd">Le fil conducteur</div>
+        <p>Chaque rubrique de ce tableau de bord correspond à une ligne du <b>Dispositif informationnel de BAM</b>, organisé en trois blocs : environnement international, données monétaires et financières nationales, données économiques nationales. Ce document a servi à décider quoi chercher.</p>
+      </div>
+      <a class="m-doc" href="dispositif-informationnel-bam.pdf" target="_blank" rel="noopener">
+        <span class="m-doc-ico">PDF</span>
+        <span class="m-doc-txt"><b>Dispositif informationnel de Bank Al-Maghrib</b><span>Le document officiel qui recense les sources utilisées par BAM. Cliquez pour l'ouvrir ou le télécharger.</span></span>
+        <span class="m-doc-cta">Ouvrir ▸</span>
+      </a>
+      <div class="m-notes">
+        <div class="m-notes-hd">Notes de méthode et limites</div>
+        <ul>
+          <li><b>Output gap reconstruit.</b> L'output gap n'est pas publié pour le Maroc. Je l'ai reconstruit selon les <b>trois méthodes du document de travail de Bank Al-Maghrib</b> (<a href="ref-output-gap-chafik-bam-2017.pdf" target="_blank" rel="noopener">Chafik, 2017</a>) : le filtre de Hodrick-Prescott, la fonction de production de Cobb-Douglas, et le modèle semi-structurel de Blagrave et al. (2015). Deux études marocaines détaillent chacune une de ces méthodes : le filtre HP (<a href="ref-output-gap-hp.pdf" target="_blank" rel="noopener">Bassite &amp; El Khattab</a>) et la fonction de production (<a href="ref-output-gap-fonction-production.pdf" target="_blank" rel="noopener">Hefnaoui &amp; Charfi, 2024</a>). C'est une estimation, pas une mesure directe.</li>
+          <li><b>Le choix des inputs reste à consolider.</b> La sélection s'appuie pour l'instant sur une logique économique (retenir ce qui cause ou anticipe l'inflation à deux ans, écarter ce qui confirme trop tard ou fait doublon). Ce que je veux surtout comprendre, c'est comment Bank Al-Maghrib elle-même sélectionne et hiérarchise ses propres inputs.</li>
+          <li><b>Sourcing primaire.</b> Chaque donnée a été récupérée directement à la source citée dans le Dispositif informationnel de BAM (HCP, Office des Changes, Bank Al-Maghrib, TGR, ainsi que FRED et le FMI pour l'environnement international), et non via des agrégateurs tiers.</li>
+        </ul>
+      </div>
+      <p class="m-hint">Choisis une donnée dans le menu de gauche pour voir sa définition, ses statistiques et l'analyse de ses mouvements.</p>` : `
+      <div class="m-steps">
+        <div class="m-step"><span class="m-num">01</span><b>Choose the inputs</b><p>Select the indicators that genuinely weigh on the decision: those that cause or anticipate inflation two years out, and the external channels that drive it in Morocco.</p></div>
+        <div class="m-step"><span class="m-num">02</span><b>Source the data</b><p>Source every input from primary data. The scope follows Bank Al-Maghrib's <b>Information Framework</b>, the official document listing the sources the Bank uses to build its forecasts.</p></div>
+        <div class="m-step"><span class="m-num">03</span><b>Analyse the moves</b><p>For every series: a complete definition, descriptive statistics, then a commentary on the major moves and what happened in the world to trigger them.</p></div>
+      </div>
+      <div class="m-source">
+        <div class="m-source-hd">The thread running through it</div>
+        <p>Every section of this dashboard maps to a line in BAM's <b>Information Framework</b>, organised in three blocks: international environment, domestic monetary and financial data, domestic economic data. This document decided what to go and find.</p>
+      </div>
+      <a class="m-doc" href="dispositif-informationnel-bam.pdf" target="_blank" rel="noopener">
+        <span class="m-doc-ico">PDF</span>
+        <span class="m-doc-txt"><b>Bank Al-Maghrib's Information Framework</b><span>The official document listing the sources BAM uses. Click to open or download it.</span></span>
+        <span class="m-doc-cta">Open ▸</span>
+      </a>
+      <div class="m-notes">
+        <div class="m-notes-hd">Method notes and limitations</div>
+        <ul>
+          <li><b>Output gap, reconstructed.</b> The output gap is not published for Morocco. I reconstructed it following the <b>three methods of Bank Al-Maghrib's working paper</b> (<a href="ref-output-gap-chafik-bam-2017.pdf" target="_blank" rel="noopener">Chafik, 2017</a>): the Hodrick-Prescott filter, the Cobb-Douglas production function, and the semi-structural model of Blagrave et al. (2015). Two Moroccan studies each detail one of these methods: the HP filter (<a href="ref-output-gap-hp.pdf" target="_blank" rel="noopener">Bassite &amp; El Khattab</a>) and the production function (<a href="ref-output-gap-fonction-production.pdf" target="_blank" rel="noopener">Hefnaoui &amp; Charfi, 2024</a>). This is an estimate, not a direct measurement.</li>
+          <li><b>The choice of inputs is still a work in progress.</b> The selection currently rests on economic reasoning (keep what causes or anticipates inflation two years out, drop what confirms too late or duplicates). What I most want to understand is how Bank Al-Maghrib itself selects and ranks its own inputs.</li>
+          <li><b>Primary sourcing.</b> Every data point was pulled directly from the source cited in BAM's Information Framework (HCP, Office des Changes, Bank Al-Maghrib, TGR, plus FRED and the IMF for the international environment), never from third-party aggregators.</li>
+        </ul>
+      </div>
+      <p class="m-hint">Pick a series from the left-hand menu to see its definition, statistics and the analysis of its moves.</p>`;
+  document.getElementById("mission").innerHTML = pageShell(
+    fr?"L'exercice":"The exercise",
+    fr?"Les inputs de la décision de politique monétaire de Bank Al-Maghrib":"The inputs behind Bank Al-Maghrib's monetary policy decision",
+    fr?"Construire la base de données qui alimente un modèle d'anticipation des décisions de taux de BAM (hausse, baisse ou statu quo). Trois étapes.":"Building the database that feeds a model anticipating BAM's rate decisions (hike, cut or hold). Three steps.",
+    body);
+}
+function renderSupervisor(){
+  const fr = LANG!=="en";
+  const body = fr ? `
+      <div class="m-source">
+        <div class="m-source-hd">Le contexte</div>
+        <p>Ce Data Lab est le livrable de l'exercice que vous m'avez confié sur le desk Rates de BMCE Capital Markets : « choisir les inputs de la décision de politique monétaire de Bank Al-Maghrib ». Il documente chaque étape, de la donnée brute jusqu'à l'analyse, pour que le raisonnement soit vérifiable de bout en bout.</p>
+      </div>
+      <div class="m-steps">
+        <div class="m-step"><span class="m-num">1</span><b>Ce qu'on m'a demandé</b><p>Choisir les inputs, aller chercher la donnée à la source, puis analyser les mouvements avec des statistiques descriptives et le contexte macro.</p></div>
+        <div class="m-step"><span class="m-num">2</span><b>Comment j'ai procédé</b><p>Le périmètre suit le Dispositif informationnel de BAM ligne par ligne. Chaque série est sourcée directement (HCP, BAM, Office des Changes, TGR, FRED, FMI), jamais via un agrégateur.</p></div>
+        <div class="m-step"><span class="m-num">3</span><b>Ce qui reste ouvert</b><p>Trois points sont signalés explicitement sur la page « La démarche » : la reconstruction de l'output gap, le choix des inputs encore à consolider, et le sourcing primaire. Je veux en discuter avec vous.</p></div>
+      </div>
+      <a class="m-cta" href="#" onclick="selectMission();return false;">Ouvrir la page « La démarche » ▸</a>
+      <div class="m-notes">
+        <div class="m-notes-hd">Ce que je cherche comme retour</div>
+        <ul>
+          <li><b>Sur les inputs.</b> Est-ce que la logique de sélection tient ? Y a-t-il un input que BAM utilise en interne et que je n'ai pas identifié ?</li>
+          <li><b>Sur les données manquantes.</b> Certaines rubriques du Dispositif informationnel restent sans donnée (anticipations d'inflation, conditions d'octroi du crédit) : avez-vous accès à ces séries ?</li>
+          <li><b>Sur la suite.</b> La prochaine étape est de construire le modèle d'anticipation proprement dit sur cette base de données. Je suis preneur d'un cadrage sur la priorité entre rigueur statistique et lisibilité opérationnelle.</li>
+        </ul>
+      </div>
+      <p class="m-hint">Toutes les séries, définitions et sources sont accessibles dans le menu de gauche.</p>` : `
+      <div class="m-source">
+        <div class="m-source-hd">Context</div>
+        <p>This Data Lab is the deliverable for the exercise assigned to me on the Rates desk at BMCE Capital Markets: "choose the inputs behind Bank Al-Maghrib's monetary policy decision." It documents every step, from raw data to analysis, so the reasoning can be checked end to end.</p>
+      </div>
+      <div class="m-steps">
+        <div class="m-step"><span class="m-num">1</span><b>What I was asked</b><p>Choose the inputs, source the data directly, then analyse the moves with descriptive statistics and macro context.</p></div>
+        <div class="m-step"><span class="m-num">2</span><b>How I went about it</b><p>The scope follows BAM's Information Framework line by line. Every series is sourced directly (HCP, BAM, Office des Changes, TGR, FRED, IMF), never through an aggregator.</p></div>
+        <div class="m-step"><span class="m-num">3</span><b>What is still open</b><p>Three points are flagged explicitly on the "Approach" page: the output-gap reconstruction, the input selection still being consolidated, and primary sourcing. I want to discuss these with you.</p></div>
+      </div>
+      <a class="m-cta" href="#" onclick="selectMission();return false;">Open the "Approach" page ▸</a>
+      <div class="m-notes">
+        <div class="m-notes-hd">The feedback I am looking for</div>
+        <ul>
+          <li><b>On the inputs.</b> Does the selection logic hold up? Is there an input BAM uses internally that I have not identified?</li>
+          <li><b>On missing data.</b> A few sections of the Information Framework still have no data attached (inflation expectations, credit-granting conditions): do you have access to those series?</li>
+          <li><b>On next steps.</b> The next stage is building the actual anticipation model on top of this database. I would welcome guidance on prioritising statistical rigour versus operational readability.</li>
+        </ul>
+      </div>
+      <p class="m-hint">Every series, definition and source is available in the left-hand menu.</p>`;
+  document.getElementById("supervisor").innerHTML = pageShell(
+    fr?"POUR MON MAÎTRE DE STAGE":"FOR MY SUPERVISOR",
+    fr?"Le livrable de l'exercice « inputs de la décision BAM »":"The deliverable for the “BAM decision inputs” exercise",
+    fr?"Préparé pendant mon stage sur le desk Rates de BMCE Capital Markets.":"Prepared during my internship on the Rates desk at BMCE Capital Markets.",
+    body);
+}
+function renderRecruiters(){
+  const fr = LANG!=="en";
+  const badgesFr = ["Python","pandas / NumPy","APIs HCP, BAM, FRED, FMI, TGR","SVG fait main (zéro dépendance)","GitHub Actions (refresh quotidien)","GitHub Pages"];
+  const badgesEn = ["Python","pandas / NumPy","HCP, BAM, FRED, IMF, TGR APIs","hand-built SVG (zero dependency)","GitHub Actions (daily refresh)","GitHub Pages"];
+  const badges = (fr?badgesFr:badgesEn).map(b=>`<span class="m-badge">${b}</span>`).join("");
+  const body = fr ? `
+      <div class="m-steps">
+        <div class="m-step"><span class="m-num">1</span><b>Un vrai problème, pas un exercice jouet</b><p>Anticiper les décisions de taux de Bank Al-Maghrib : cadrage théorique (fonction de réaction), sourcing de données primaires, et discipline de modélisation (point-in-time, walk-forward, limites assumées).</p></div>
+        <div class="m-step"><span class="m-num">2</span><b>Construit de bout en bout, seul</b><p>Ingestion de plus de 25 séries depuis des sources primaires (API HCP, fichiers BAM, FRED, TGR, annuaires), moteur de graphes SVG écrit à la main, déploiement automatisé.</p></div>
+        <div class="m-step"><span class="m-num">3</span><b>Rigueur assumée sur les limites</b><p>Chaque série a une définition complète et, quand c'est pertinent, ses limites explicitement signalées (biais de fin d'échantillon, données provisoires, ruptures de série).</p></div>
+      </div>
+      <div class="m-badges">${badges}</div>
+      <div class="m-source">
+        <div class="m-source-hd">Ce que ça montre</div>
+        <p>Ingénierie de données sur sources primaires (pas d'agrégateurs), raisonnement macroéconomique appliqué à une vraie banque centrale, un produit construit et déployé de zéro, et une communication écrite bilingue pensée pour deux publics différents (un maître de stage, un recruteur).</p>
+      </div>
+      <a class="m-cta" href="#" onclick="selectMission();return false;">Explorer les données ▸</a>
+      <div class="m-notes">
+        <div class="m-notes-hd">À propos</div>
+        <ul>
+          <li>Construit par Marwane Benaddi, étudiant à l'EDHEC Business School (BBA2), pendant un stage de finance de marché sur le desk Rates de BMCE Capital Markets.</li>
+          <li>La suite du projet : un modèle d'anticipation des décisions BAM (régression logistique multinomiale, validation walk-forward) construit sur cette base de données.</li>
+        </ul>
+      </div>` : `
+      <div class="m-steps">
+        <div class="m-step"><span class="m-num">1</span><b>A real problem, not a toy exercise</b><p>Anticipating Bank Al-Maghrib's rate decisions: theoretical framing (the central bank's reaction function), primary-source data sourcing, and modelling discipline (point-in-time, walk-forward, limitations owned up front).</p></div>
+        <div class="m-step"><span class="m-num">2</span><b>Built end to end, solo</b><p>Ingested 25+ series from primary sources (HCP API, BAM files, FRED, TGR, yearbooks), a hand-written SVG charting engine, automated deployment.</p></div>
+        <div class="m-step"><span class="m-num">3</span><b>Rigour about the limits</b><p>Every series carries a complete definition and, where relevant, its limitations flagged explicitly (end-of-sample bias, provisional data, series breaks).</p></div>
+      </div>
+      <div class="m-badges">${badges}</div>
+      <div class="m-source">
+        <div class="m-source-hd">What it demonstrates</div>
+        <p>Primary-source data engineering (no aggregators), macroeconomic reasoning applied to a real central bank, a product built and deployed from scratch, and bilingual written communication designed for two different audiences (a supervisor, a recruiter).</p>
+      </div>
+      <a class="m-cta" href="#" onclick="selectMission();return false;">Explore the data ▸</a>
+      <div class="m-notes">
+        <div class="m-notes-hd">About</div>
+        <ul>
+          <li>Built by Marwane Benaddi, EDHEC Business School student (BBA2), during a financial markets internship on the Rates desk at BMCE Capital Markets.</li>
+          <li>Next up: an actual anticipation model for BAM's decisions (multinomial logistic regression, walk-forward validation) built on top of this database.</li>
+        </ul>
+      </div>`;
+  document.getElementById("recruiters").innerHTML = pageShell(
+    fr?"POUR LES RECRUTEURS":"FOR RECRUITERS",
+    fr?"Un cas pratique vivant de macro appliquée et de data engineering":"A live case study in applied macro and data engineering",
+    fr?"Ce que ce projet montre, en trois minutes de lecture.":"What this project demonstrates, in three minutes.",
+    body);
+}
+function setLang(lang){
+  LANG=lang;
+  try{ localStorage.setItem("dl_lang", lang); }catch(e){}
+  applyChromeText();
+  buildNav(); syncNav();
+  if(state.view==="mission") renderMission();
+  else if(state.view==="supervisor") renderSupervisor();
+  else if(state.view==="recruiters") renderRecruiters();
+  else if(state.view==="series" && state.id){ refresh(); }
+}
+document.getElementById("langtoggle").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-lang]"); if(!b) return;
+  if(b.dataset.lang!==LANG) setLang(b.dataset.lang);
+});
+
+applyChromeText();
 buildNav(); selectMission();   // on ouvre sur la page "La démarche"
 </script>
 </body>
@@ -1422,12 +1658,47 @@ def write_features(data):
     print(f"features.csv : {len(months)} mois x {len(cols)} colonnes")
 
 
+def translate_data(data):
+    """Deep copy de `data` avec name/unit/note/narrative/labels de courbe traduits en anglais.
+    Fallback silencieux sur le francais si une traduction manque (jamais de texte casse)."""
+    import copy
+    out = copy.deepcopy(data)
+    for did, ds in out.items():
+        ds["name"] = NAME_EN.get(did, ds["name"])
+        ds["unit"] = UNIT_EN.get(ds["unit"], ds["unit"])
+        ds["group"] = GROUP_EN.get(ds["group"], ds["group"])
+        ds["section"] = SECTION_EN.get(ds["section"], ds["section"])
+        ds["note"] = NOTES_EN.get(did, ds.get("note", ""))
+        ds["narrative"] = NARRATIVES_EN.get(did, ds.get("narrative", ""))
+        for L in ds["lines"]:
+            L["label"] = LABEL_EN.get(L["label"], L["label"])
+        if ds.get("stats") and ds["stats"].get("main_label"):
+            ds["stats"]["main_label"] = LABEL_EN.get(ds["stats"]["main_label"], ds["stats"]["main_label"])
+    return out
+
+
+def translate_taxonomy(taxo):
+    out = []
+    for sec in taxo:
+        topics = []
+        for t in sec["topics"]:
+            topics.append({"name": TOPIC_NAME_EN.get(t["name"], t["name"]),
+                            "source": TOPIC_SOURCE_EN.get(t["source"], t["source"]),
+                            "ids": t["ids"]})
+        out.append({"section": SECTION_EN.get(sec["section"], sec["section"]), "topics": topics})
+    return out
+
+
 def main():
     DEST.mkdir(parents=True, exist_ok=True)
     data = build_data()
+    data_en = translate_data(data)
+    taxo_en = translate_taxonomy(TAXONOMY)
     html = (HTML
             .replace("__DATA__", json.dumps(data, ensure_ascii=False))
-            .replace("__TAXO__", json.dumps(TAXONOMY, ensure_ascii=False)))
+            .replace("__DATA_EN__", json.dumps(data_en, ensure_ascii=False))
+            .replace("__TAXO__", json.dumps(TAXONOMY, ensure_ascii=False))
+            .replace("__TAXO_EN__", json.dumps(taxo_en, ensure_ascii=False)))
     FICHIER.write_text(html, encoding="utf-8")
     write_features(data)
     # Documents servis en telechargement depuis la page "La demarche".
