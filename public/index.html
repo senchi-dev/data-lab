@@ -326,6 +326,7 @@ function niceTicks(min,max,n){
   return out;
 }
 function fmt(v){ const d=D()[state.id].decimals; return v.toLocaleString(locale(),{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function fmtWith(v,d){ return v.toLocaleString(locale(),{minimumFractionDigits:d,maximumFractionDigits:d}); }
 
 /* ---------- rendu ---------- */
 let RENDER = null;
@@ -367,7 +368,7 @@ function renderCorr(r){
 
 function draw(){
   const meta=D()[state.id];
-  let series=meta.lines.map(L=>({label:L.label,color:L.color,pts:applyTransform(aggregate(L.points,state.gran,meta.agg),state.transform)}));
+  let series=meta.lines.map(L=>({label:L.label,color:L.color,unit:meta.unit,decimals:meta.decimals,pts:applyTransform(aggregate(L.points,state.gran,meta.agg),state.transform)}));
   // Comparaison a une 2e serie
   let corr=null;
   const cmpId=(state.compareId && state.compareId!==state.id && D()[state.compareId]) ? state.compareId : null;
@@ -376,9 +377,11 @@ function draw(){
     const prMain=series.reduce((a,b)=>b.pts.length>a.pts.length?b:a);
     corr=pearson(alignPairs(prMain.pts, cmPts));
     if(state.compareMode==="spread"){
-      series=[{label:t("spreadLabel")+" (" + meta.name + t("minusStr") + cm.name + ")", color:CMP_COLOR, pts:spreadPts(prMain.pts, cmPts)}];
+      // Ecart calcule en unites mixtes si meta.unit != cm.unit ; on l'affiche neutre pour ne pas induire en erreur.
+      const spreadUnit = meta.unit===cm.unit ? meta.unit : "";
+      series=[{label:t("spreadLabel")+" (" + meta.name + t("minusStr") + cm.name + ")", color:CMP_COLOR, unit:spreadUnit, decimals:meta.decimals, pts:spreadPts(prMain.pts, cmPts)}];
     } else {
-      series=series.concat([{label:cm.name, color:CMP_COLOR, pts:cmPts, dashed:true}]);
+      series=series.concat([{label:cm.name, color:CMP_COLOR, unit:cm.unit, decimals:cm.decimals, pts:cmPts, dashed:true}]);
     }
   }
   renderCorr(corr);
@@ -502,7 +505,9 @@ function onMove(e){
   for(const s of series){
     const p=nearestByTime(s.pts,t); if(!p) continue;
     mk("circle",{cx:X(p.t),cy:Y(p.v),r:4.5,fill:s.color,stroke:"#fff","stroke-width":1.5});
-    rows+=`<div><i class="dot" style="background:${s.color};display:inline-block;margin-right:6px"></i>${s.label} : <b>${fmt(p.v)}</b> ${meta.unit.split(" ")[0]}</div>`;
+    const sd = (s.decimals!=null) ? s.decimals : meta.decimals;
+    const su = (s.unit!=null) ? s.unit : meta.unit;
+    rows+=`<div><i class="dot" style="background:${s.color};display:inline-block;margin-right:6px"></i>${s.label} : <b>${fmtWith(p.v,sd)}</b> ${su.split(" ")[0]}</div>`;
   }
   tip.innerHTML=`<div class="d">${label}</div>${rows}`;
   tip.style.opacity=1;
