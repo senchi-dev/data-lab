@@ -488,6 +488,7 @@ def load_taux_debiteurs():
 # Note affichee sous chaque graphe, specifique a la serie.
 NOTES = {
     "directeur": "Taux directeur de Bank Al-Maghrib, le taux auquel elle prête aux banques : c'est l'instrument de la politique monétaire et la variable que le modèle cherche à anticiper. Série en escalier reconstruite depuis l'historique des décisions du Conseil (une réunion par trimestre) ; entre deux décisions, le taux reste inchangé. La décision se lit dans les variations : hausse, baisse, ou statu quo.",
+    "real_rate": "Taux d'intérêt réel, calculé (pas une nouvelle source) : taux directeur moins inflation sous-jacente (core). C'est la variable « Taux d'intérêt effectif réel » du bloc Politique monétaire du dispositif de prévision de BAM, qui boucle sur la demande intérieure. Un taux réel négatif ou proche de zéro signifie une politique monétaire accommodante en termes réels, même si le taux nominal semble élevé.",
     "bce": "Taux directeur BCE, niveau en fin de période (décision réelle, pas de 0,25 %). Refi (haut) vs dépôt (bas, devenu le vrai pilote depuis 2014).",
     "fed": "Cible de la Fed en fin de période. Cible unique jusqu'à déc. 2008, puis borne haute de la fourchette.",
     "infl_us": "Inflation US en glissement annuel (variation sur 12 mois de l'IPC).",
@@ -578,6 +579,13 @@ def build_data():
                          "lines": [{"label": "Inflation globale", "color": BLEU, "points": glob},
                                    {"label": "Sous-jacente (core)", "color": ORANGE, "points": core}]}
     print(f"{'Inflation globale + core':<30} {'2 series':<12} {len(glob)}/{len(core)} mois  (fichier BAM, avg)")
+
+    # --- Taux d'interet reel effectif : directeur - inflation core, calcule (pas une nouvelle source) ---
+    real_rate = {k: round(directeur[k] - core[k], 2) for k in directeur if k in core}
+    data["real_rate"] = {"name": "Taux d'intérêt réel (directeur - core)", "section": "Décision de politique monétaire",
+                         "group": "Cible", "unit": "%", "decimals": 2, "agg": "avg", "freq": "M",
+                         "lines": [{"label": "Taux réel", "color": VERT, "points": real_rate}]}
+    print(f"{'Taux dinteret reel':<30} {'real_rate':<12} {len(real_rate)} mois  (calcule : directeur - core)")
 
     pib = load_hcp_pib()
     data["pib"] = {"name": "Croissance du PIB (g.a.)", "section": "Données économiques nationales",
@@ -729,6 +737,8 @@ TAXONOMY = [
     {"section": "Décision de politique monétaire (la cible)", "topics": [
         {"name": "Taux directeur et décisions du Conseil",
          "source": "Bank Al-Maghrib · Historique des décisions de politique monétaire", "ids": ["directeur"]},
+        {"name": "Taux d'intérêt réel (calculé)",
+         "source": "Calculé : taux directeur BAM - inflation sous-jacente (variable du dispositif de prévision de BAM)", "ids": ["real_rate"]},
     ]},
     {"section": "Environnement international", "topics": [
         {"name": "Environnement international (croissance, emploi, inflation, marchés financiers, matières premières, décisions des banques centrales)",
@@ -1503,6 +1513,7 @@ function renderMission(){
           <li><b>Output gap reconstruit.</b> L'output gap n'est pas publié pour le Maroc. Je l'ai reconstruit selon les <b>trois méthodes du document de travail de Bank Al-Maghrib</b> (<a href="ref-output-gap-chafik-bam-2017.pdf" target="_blank" rel="noopener">Chafik, 2017</a>) : le filtre de Hodrick-Prescott, la fonction de production de Cobb-Douglas, et le modèle semi-structurel de Blagrave et al. (2015). Deux études marocaines détaillent chacune une de ces méthodes : le filtre HP (<a href="ref-output-gap-hp.pdf" target="_blank" rel="noopener">Bassite &amp; El Khattab</a>) et la fonction de production (<a href="ref-output-gap-fonction-production.pdf" target="_blank" rel="noopener">Hefnaoui &amp; Charfi, 2024</a>). C'est une estimation, pas une mesure directe.</li>
           <li><b>Le choix des inputs reste à consolider.</b> La sélection s'appuie pour l'instant sur une logique économique (retenir ce qui cause ou anticipe l'inflation à deux ans, écarter ce qui confirme trop tard ou fait doublon). Ce que je veux surtout comprendre, c'est comment Bank Al-Maghrib elle-même sélectionne et hiérarchise ses propres inputs.</li>
           <li><b>Sourcing primaire.</b> Chaque donnée a été récupérée directement à la source citée dans le Dispositif informationnel de BAM (HCP, Office des Changes, Bank Al-Maghrib, TGR, ainsi que FRED et le FMI pour l'environnement international), et non via des agrégateurs tiers.</li>
+          <li><b>Le choix des inputs s'appuie sur le modèle de BAM elle-même.</b> Le <a href="https://www.bkam.ma/Politique-monetaire/Cadre-d-analyse-et-de-prevision/Dispositif-de-prevision" target="_blank" rel="noopener">Dispositif de prévision de Bank Al-Maghrib</a> décrit leur modèle central (semi-structurel, 4 blocs : croissance, inflation, secteur extérieur, politique monétaire). C'est la référence utilisée pour prioriser les inputs de ce tableau de bord, et elle a inspiré l'ajout du <b>taux d'intérêt réel</b> (taux directeur moins inflation sous-jacente), une variable de leur bloc politique monétaire, calculée ici à partir de données déjà présentes.</li>
           <li><b>Construit avec l'IA comme coach.</b> Ce site (recherche de sources, code, mise en forme) est réalisé avec l'aide de Claude, utilisé comme coach et facilitateur technique. Je n'aurais pas pu construire seul la partie technique. Les choix de fond, eux, restent les miens : quels inputs, quelles sources, quelles limites signaler.</li>
         </ul>
       </div>
@@ -1527,6 +1538,7 @@ function renderMission(){
           <li><b>Output gap, reconstructed.</b> The output gap is not published for Morocco. I reconstructed it following the <b>three methods of Bank Al-Maghrib's working paper</b> (<a href="ref-output-gap-chafik-bam-2017.pdf" target="_blank" rel="noopener">Chafik, 2017</a>): the Hodrick-Prescott filter, the Cobb-Douglas production function, and the semi-structural model of Blagrave et al. (2015). Two Moroccan studies each detail one of these methods: the HP filter (<a href="ref-output-gap-hp.pdf" target="_blank" rel="noopener">Bassite &amp; El Khattab</a>) and the production function (<a href="ref-output-gap-fonction-production.pdf" target="_blank" rel="noopener">Hefnaoui &amp; Charfi, 2024</a>). This is an estimate, not a direct measurement.</li>
           <li><b>The choice of inputs is still a work in progress.</b> The selection currently rests on economic reasoning (keep what causes or anticipates inflation two years out, drop what confirms too late or duplicates). What I most want to understand is how Bank Al-Maghrib itself selects and ranks its own inputs.</li>
           <li><b>Primary sourcing.</b> Every data point was pulled directly from the source cited in BAM's Information Framework (HCP, Office des Changes, Bank Al-Maghrib, TGR, plus FRED and the IMF for the international environment), never from third-party aggregators.</li>
+          <li><b>Input selection is grounded in BAM's own model.</b> <a href="https://www.bkam.ma/Politique-monetaire/Cadre-d-analyse-et-de-prevision/Dispositif-de-prevision" target="_blank" rel="noopener">Bank Al-Maghrib's Forecasting Framework</a> describes their central model (semi-structural, 4 blocks: growth, inflation, external sector, monetary policy). It is the reference used to prioritise the inputs in this dashboard, and it directly inspired adding the <b>real interest rate</b> (key rate minus core inflation), a variable from their monetary policy block, computed here from data already available.</li>
           <li><b>Built with AI as a coach.</b> This site (sourcing, code, formatting) is made with the help of Claude, used as a coach and technical facilitator. I could not have built the technical side on my own. The substantive choices remain mine: which inputs, which sources, which limitations to flag.</li>
         </ul>
       </div>
@@ -1813,7 +1825,7 @@ CORR_INPUTS = [
     ("eurusd", None), ("bce", "Depot"), ("fed", None), ("infl_ze", None), ("infl_us", None),
     ("food", None), ("gepu", None), ("commerce", "Solde commercial"),
     ("travail", "Taux de chômage"), ("debiteurs", "Taux global"), ("capi", None),
-    ("depots", "Dépôts à 12 mois"), ("icm", None), ("ipai", "IPAI global"),
+    ("depots", "Dépôts à 12 mois"), ("icm", None), ("ipai", "IPAI global"), ("real_rate", None),
 ]
 
 

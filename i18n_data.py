@@ -66,6 +66,7 @@ NAME_EN = {
     "food": "Global food price index",
     "gepu": "Global economic policy uncertainty",
     "directeur": "BAM key rate (Council decisions)",
+    "real_rate": "Real interest rate (key rate minus core)",
     "monia": "MONIA (overnight interbank rate)",
     "inflation": "Headline & core inflation",
     "pib": "GDP growth (y/y)",
@@ -92,7 +93,7 @@ LABEL_EN = {
     "Refi": "Refi", "Depot": "Deposit", "Cible Fed": "Fed target",
     "Inflation US": "US inflation", "Inflation ZE": "Euro-area inflation",
     "EUR/USD": "EUR/USD", "Brent": "Brent", "FAO/FMI": "FAO/IMF", "GEPU": "GEPU",
-    "Taux directeur": "Key rate", "MONIA": "MONIA",
+    "Taux directeur": "Key rate", "Taux réel": "Real rate", "MONIA": "MONIA",
     "Inflation globale": "Headline inflation", "Sous-jacente (core)": "Core (underlying)",
     "PIB réel (volume, CVS)": "Real GDP (volume, s.a.)",
     "Filtre HP": "HP filter", "Fonction de production": "Production function", "Semi-structurel": "Semi-structural",
@@ -116,6 +117,7 @@ LABEL_EN = {
 
 NOTES_EN = {
     "directeur": "Bank Al-Maghrib's key rate, the rate at which it lends to banks: this is the instrument of monetary policy and the variable the model tries to anticipate. A step series reconstructed from the Council's decision history (one meeting per quarter); between two decisions the rate stays unchanged. The decision itself shows up in the changes: hike, cut, or hold.",
+    "real_rate": "Real interest rate, computed (not a new data source): the key rate minus core inflation. This is the \"real effective interest rate\" variable in the monetary policy block of BAM's forecasting framework, which loops back into domestic demand. A negative or near-zero real rate means an accommodative policy in real terms, even when the nominal rate looks high.",
     "bce": "ECB key rate, end-of-period level (the actual decision, in 0.25% steps). Refi (top) vs deposit (bottom, the real driver since 2014).",
     "fed": "Fed target, end-of-period. A single target until Dec. 2008, then the upper bound of the range.",
     "infl_us": "US inflation, year-on-year (12-month change in the CPI).",
@@ -149,6 +151,7 @@ NOTES_EN = {
 # Taxonomy topic translations, keyed by the exact French "name" / "source" strings used in TAXONOMY.
 TOPIC_NAME_EN = {
     "Taux directeur et décisions du Conseil": "Key rate and Council decisions",
+    "Taux d'intérêt réel (calculé)": "Real interest rate (computed)",
     "Environnement international (croissance, emploi, inflation, marchés financiers, matières premières, décisions des banques centrales)":
         "International environment (growth, employment, inflation, financial markets, commodity prices, central bank decisions)",
     "Statistiques monétaires (agrégats, crédit, dépôts)": "Monetary statistics (aggregates, credit, deposits)",
@@ -174,6 +177,8 @@ TOPIC_NAME_EN = {
 
 TOPIC_SOURCE_EN = {
     "Bank Al-Maghrib · Historique des décisions de politique monétaire": "Bank Al-Maghrib · History of monetary policy decisions",
+    "Calculé : taux directeur BAM - inflation sous-jacente (variable du dispositif de prévision de BAM)":
+        "Computed: BAM key rate minus core inflation (a variable from BAM's own forecasting framework)",
     "Réseau GPMN · FMI · Banque Mondiale · BRI · OCDE · FED · BCE · BoE": "GPMN network · IMF · World Bank · BIS · OECD · Fed · ECB · BoE",
     "Bank Al-Maghrib (via API HCP, I1450)": "Bank Al-Maghrib (via HCP API, I1450)",
     "BAM": "BAM",
