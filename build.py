@@ -881,6 +881,28 @@ HTML = r"""<!doctype html>
         margin:4px 0 24px; }
   .page .m-cta:hover{ opacity:.92; }
   @media (max-width:760px){ .page .m-steps{ grid-template-columns:1fr; } }
+  /* Page correlation : classement + nuage de points */
+  #correlation{ max-width:960px; }
+  .ct-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:12px; margin:6px 0 22px; }
+  table.ct{ width:100%; border-collapse:collapse; font-size:13px; }
+  table.ct th, table.ct td{ padding:9px 12px; text-align:right; white-space:nowrap; }
+  table.ct th:first-child, table.ct td:first-child,
+  table.ct th:nth-child(2), table.ct td:nth-child(2){ text-align:left; }
+  table.ct thead th{ background:var(--panel); color:var(--muted); font-weight:600; border-bottom:1px solid var(--line); }
+  table.ct tbody tr{ cursor:pointer; transition:background .1s; }
+  table.ct tbody tr:nth-child(even){ background:var(--accent-soft); }
+  table.ct tbody tr:hover{ background:var(--accent-soft); }
+  table.ct tbody tr.on{ outline:2px solid var(--accent); outline-offset:-2px; }
+  table.ct td.ct-rank{ color:var(--muted); font-weight:700; }
+  table.ct td.ct-name{ font-weight:600; color:var(--ink); }
+  table.ct td.ct-r{ font-weight:800; color:var(--accent); }
+  .scat-card{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px 8px 8px; margin-bottom:20px; }
+  .scat-hd{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:0 12px 10px; flex-wrap:wrap; }
+  .scat-hd h3{ margin:0; font-size:15px; color:var(--ink); }
+  .scat-hd .scat-r{ font-size:13px; font-weight:700; color:var(--accent); }
+  .scat-legend{ display:flex; gap:16px; padding:0 14px 12px; font-size:12px; color:var(--muted); flex-wrap:wrap; }
+  .scat-legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .scat-legend i{ width:9px; height:9px; border-radius:50%; display:inline-block; }
   /* Définition (avant le graphe) */
   #definition{ background:var(--accent-soft); border-radius:12px; padding:4px 18px 14px; margin:16px 0 4px; }
   #definition .sec-hd{ margin:14px 0 6px; }
@@ -963,6 +985,7 @@ HTML = r"""<!doctype html>
     <section id="mission" class="page"></section>
     <section id="supervisor" class="page"></section>
     <section id="recruiters" class="page"></section>
+    <section id="correlation" class="page"></section>
     <div class="controls" id="controls">
       <div class="seg" id="gran"></div>
       <button class="btn" id="exp-series"></button>
@@ -1003,6 +1026,9 @@ const DATA_FR = __DATA__;
 const DATA_EN = __DATA_EN__;
 const TAXO_FR = __TAXO__;
 const TAXO_EN = __TAXO_EN__;
+const CORR_FR = __CORR__;
+const CORR_EN = __CORR_EN__;
+function C(){ return LANG==="en" ? CORR_EN : CORR_FR; }
 let LANG = (function(){ try{ return localStorage.getItem("dl_lang")==="en" ? "en" : "fr"; }catch(e){ return "fr"; } })();
 function D(){ return LANG==="en" ? DATA_EN : DATA_FR; }
 function T(){ return LANG==="en" ? TAXO_EN : TAXO_FR; }
@@ -1018,6 +1044,7 @@ const UI = {
   navHome: {fr:"La démarche", en:"The approach"},
   navSupervisor: {fr:"Stage", en:"Internship"},
   navRecruiters: {fr:"Recrutement", en:"Recruiting"},
+  navCorrelation: {fr:"Analyse de corrélation", en:"Correlation analysis"},
   definition: {fr:"Définition", en:"Definition"},
   csvSeries: {fr:"CSV série", en:"Series CSV"},
   csvSeriesTitle: {fr:"Télécharger cette série en CSV", en:"Download this series as CSV"},
@@ -1323,6 +1350,7 @@ function buildNav(){
   nav.appendChild(mk("nav-home","navHome",()=>selectMission()));
   nav.appendChild(mk("nav-supervisor","navSupervisor",()=>selectSupervisor()));
   nav.appendChild(mk("nav-recruiters","navRecruiters",()=>selectRecruiters()));
+  nav.appendChild(mk("nav-correlation","navCorrelation",()=>selectCorrelation()));
   // Sections du dispositif informationnel : uniquement les donnees disponibles
   for(const sec of T()){
     const wrap=document.createElement("div"); wrap.className="section";
@@ -1346,13 +1374,14 @@ function buildNav(){
 }
 function syncNav(){
   document.querySelectorAll(".item[data-id]").forEach(b=>b.classList.toggle("active", b.dataset.id===state.id && state.view==="series"));
-  const map={mission:"nav-home", supervisor:"nav-supervisor", recruiters:"nav-recruiters"};
+  const map={mission:"nav-home", supervisor:"nav-supervisor", recruiters:"nav-recruiters", correlation:"nav-correlation"};
   for(const v in map){ const el=document.getElementById(map[v]); if(el) el.classList.toggle("active", state.view===v); }
 }
-function showView(view){   // "mission" | "supervisor" | "recruiters" | "series"
+function showView(view){   // "mission" | "supervisor" | "recruiters" | "correlation" | "series"
   document.getElementById("mission").style.display = view==="mission"?"block":"none";
   document.getElementById("supervisor").style.display = view==="supervisor"?"block":"none";
   document.getElementById("recruiters").style.display = view==="recruiters"?"block":"none";
+  document.getElementById("correlation").style.display = view==="correlation"?"block":"none";
   for(const el of ["definition","controls","cmpbar","card","stats-hd","stats","statstable","ana-hd","analysis","foot"])
     document.getElementById(el).style.display = view==="series"?"":"none";
 }
@@ -1365,6 +1394,7 @@ function selectSeries(id, source){ state.id=id; state.source=source; state.view=
 function selectMission(){ state.view="mission"; syncNav(); clearHead(); renderMission(); showView("mission"); }
 function selectSupervisor(){ state.view="supervisor"; syncNav(); clearHead(); renderSupervisor(); showView("supervisor"); }
 function selectRecruiters(){ state.view="recruiters"; syncNav(); clearHead(); renderRecruiters(); showView("recruiters"); }
+function selectCorrelation(){ state.view="correlation"; syncNav(); clearHead(); renderCorrelation(); showView("correlation"); }
 // Granularites autorisees selon la frequence NATIVE de la serie
 const FREQ_GRANS = { M:["M","Q","Y"], Q:["Q","Y"], A:["Y"] };
 function buildGran(){
@@ -1606,6 +1636,112 @@ function renderRecruiters(){
     fr?"Ce que ce projet montre, et comment il a vraiment été fait.":"What this project shows, and how it was actually made.",
     body);
 }
+
+/* ---------- page correlation : classement Pearson + nuage de points ---------- */
+function renderCorrelation(){
+  const fr = LANG!=="en";
+  const c = C();
+  if(!state.corrId || !c.rows.find(r=>r.id===state.corrId)) state.corrId = c.rows.length ? c.rows[0].id : null;
+  const nf=(x,d)=>x==null?(fr?"n.d.":"n/a"):x.toLocaleString(locale(),{minimumFractionDigits:d,maximumFractionDigits:d});
+  const rowsHtml = c.rows.map((r,i)=>{
+    const tLab = r.transform==="yoy" ? t("tfYoy") : t("tfLevel");
+    return `<tr class="${r.id===state.corrId?'on':''}" data-cid="${r.id}">
+      <td class="ct-rank">${i+1}</td>
+      <td class="ct-name">${r.name}</td>
+      <td>${tLab}</td>
+      <td class="ct-r">${nf(r.r,3)}</td>
+      <td>${r.n}</td>
+    </tr>`;
+  }).join("");
+  const lead = fr
+    ? `Corrélation de Pearson entre chaque input (échantillonné au mois précédant chaque réunion, jamais le mois de la réunion) et la variation du taux directeur BAM à cette réunion, sur ${c.n_meetings} réunions du Conseil depuis 2006 (dont ${c.n_moves} mouvements). Clique une ligne du tableau pour afficher son nuage de points.`
+    : `Pearson correlation between each input (sampled the month before each meeting, never the meeting's own month) and the change in BAM's key rate at that meeting, across ${c.n_meetings} Council meetings since 2006 (${c.n_moves} of them a move). Click a table row to see its scatter plot.`;
+  const body = `
+    <div class="ct-wrap"><table class="ct"><thead><tr>
+      <th>#</th><th>${fr?"Input":"Input"}</th><th>${fr?"Transformation":"Transform"}</th><th>Pearson r</th><th>n</th>
+    </tr></thead><tbody id="corr-tbody">${rowsHtml}</tbody></table></div>
+    <div class="scat-card" id="scat-card"></div>
+    <div class="m-source">
+      <div class="m-source-hd">${fr?"Méthode":"Method"}</div>
+      <p>${fr
+        ? "Pour chaque input, deux transformations sont testées (le niveau et la variation sur 12 mois), et celle qui donne la corrélation la plus forte en valeur absolue est retenue et affichée. La variable expliquée est la variation du taux directeur en points de base à chaque réunion (positive = hausse, négative = baisse, nulle = statu quo), pas une catégorie : c'est ce qui permet de calculer un vrai coefficient de Pearson sur deux variables continues."
+        : "For each input, two transformations are tested (the level and the 1-year change), and whichever gives the stronger absolute correlation is kept and shown. The dependent variable is the change in the key rate in basis points at each meeting (positive = hike, negative = cut, zero = hold), not a category: that is what allows a proper Pearson coefficient on two continuous variables."}</p>
+    </div>
+    <div class="m-notes">
+      <div class="m-notes-hd">${fr?"Limites":"Limitations"}</div>
+      <ul>
+        <li><b>${fr?"Un filtre, pas une preuve.":"A filter, not proof."}</b> ${fr?"Une corrélation élevée ne démontre pas la causalité et ne suffit pas à prédire une décision seule.":"A high correlation does not demonstrate causation and is not enough on its own to predict a decision."}</li>
+        <li><b>${fr?"Petit échantillon.":"Small sample."}</b> ${fr?`Seulement ${c.n_moves} mouvements sur la période : les coefficients sont instables, surtout pour les inputs à faible n.`:`Only ${c.n_moves} moves over the whole period: the coefficients are unstable, especially for inputs with a low n.`}</li>
+        <li><b>Pearson.</b> ${fr?"Mesure une relation linéaire et est sensible aux valeurs extrêmes ; une relation réelle mais non linéaire peut donner un r proche de zéro. Regarde toujours le nuage de points, pas seulement le chiffre.":"Measures a linear relationship and is sensitive to outliers; a real but non-linear relationship can show an r near zero. Always look at the scatter, not just the number."}</li>
+        <li><b>${fr?"Colinéarité.":"Collinearity."}</b> ${fr?"Deux inputs corrélés à la décision peuvent aussi l'être entre eux (ex. inflation globale et sous-jacente) : dans un modèle, ils n'apportent pas un signal indépendant chacun.":"Two inputs correlated with the decision can also be correlated with each other (e.g. headline and core inflation): in a model, they do not each add independent signal."}</li>
+      </ul>
+    </div>`;
+  document.getElementById("correlation").innerHTML = pageShell(
+    fr?"ANALYSE":"ANALYSIS",
+    fr?"Corrélation avec les décisions de BAM":"Correlation with BAM's decisions",
+    lead, body);
+  document.getElementById("corr-tbody").addEventListener("click", e=>{
+    const tr=e.target.closest("tr[data-cid]"); if(!tr) return;
+    state.corrId = tr.dataset.cid;
+    document.querySelectorAll("#corr-tbody tr").forEach(x=>x.classList.toggle("on", x.dataset.cid===state.corrId));
+    drawScatter();
+  });
+  drawScatter();
+}
+function drawScatter(){
+  const fr = LANG!=="en";
+  const row = C().rows.find(r=>r.id===state.corrId);
+  const card = document.getElementById("scat-card");
+  if(!row || !row.points.length){ card.innerHTML=""; return; }
+  const pts = row.points;
+  const SW=760, SH=380, SM={l:56, r:18, t:14, b:38};
+  const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y);
+  let xmin=Math.min(...xs), xmax=Math.max(...xs), ymin=Math.min(...ys), ymax=Math.max(...ys);
+  const xpad=(xmax-xmin)*0.08||1, ypad=(ymax-ymin)*0.12||10;
+  xmin-=xpad; xmax+=xpad; ymin-=ypad; ymax+=ypad;
+  if(ymin>0) ymin=0; if(ymax<0) ymax=0;
+  const X=v=> SM.l+(v-xmin)/(xmax-xmin)*(SW-SM.l-SM.r);
+  const Y=v=> SH-SM.b-(v-ymin)/(ymax-ymin)*(SH-SM.t-SM.b);
+  const xticks=niceTicks(xmin,xmax,5), yticks=niceTicks(ymin,ymax,5);
+  let svg = `<svg viewBox="0 0 ${SW} ${SH}" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;height:auto">`;
+  for(const v of yticks){
+    svg += `<line x1="${SM.l}" x2="${SW-SM.r}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`;
+    svg += `<text x="${SM.l-9}" y="${(Y(v)+4).toFixed(1)}" text-anchor="end" font-size="11" fill="var(--muted)">${v.toLocaleString(locale())}</text>`;
+  }
+  for(const v of xticks){
+    svg += `<line x1="${X(v).toFixed(1)}" x2="${X(v).toFixed(1)}" y1="${SM.t}" y2="${SH-SM.b}" stroke="var(--line)" stroke-width="1" stroke-dasharray="2 4"/>`;
+    svg += `<text x="${X(v).toFixed(1)}" y="${SH-SM.b+18}" text-anchor="middle" font-size="11" fill="var(--muted)">${v.toLocaleString(locale())}</text>`;
+  }
+  if(ymin<0&&ymax>0) svg += `<line x1="${SM.l}" x2="${SW-SM.r}" y1="${Y(0).toFixed(1)}" y2="${Y(0).toFixed(1)}" stroke="var(--muted)" stroke-width="1.2"/>`;
+  const n=pts.length, mx=xs.reduce((a,b)=>a+b,0)/n, my=ys.reduce((a,b)=>a+b,0)/n;
+  let num=0, den=0;
+  for(let i=0;i<n;i++){ num+=(xs[i]-mx)*(ys[i]-my); den+=(xs[i]-mx)*(xs[i]-mx); }
+  if(den>0){
+    const slope=num/den, b0=my-slope*mx;
+    svg += `<line x1="${X(xmin).toFixed(1)}" x2="${X(xmax).toFixed(1)}" y1="${Y(b0+slope*xmin).toFixed(1)}" y2="${Y(b0+slope*xmax).toFixed(1)}" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="5 4" opacity="0.7"/>`;
+  }
+  for(const p of pts){
+    const col = p.y>0 ? "#2e9e6b" : p.y<0 ? "#c0392b" : "#9aa2ad";
+    svg += `<circle cx="${X(p.x).toFixed(1)}" cy="${Y(p.y).toFixed(1)}" r="4.5" fill="${col}" fill-opacity="0.82" stroke="#fff" stroke-width="1"/>`;
+  }
+  svg += `</svg>`;
+  const nf=(x,d)=>x==null?(fr?"n.d.":"n/a"):x.toLocaleString(locale(),{minimumFractionDigits:d,maximumFractionDigits:d});
+  const tLab = row.transform==="yoy" ? t("tfYoy") : t("tfLevel");
+  card.innerHTML = `
+    <div class="scat-hd">
+      <h3>${row.name} <span style="color:var(--muted);font-weight:400">(${tLab}, ${row.unit})</span></h3>
+      <span class="scat-r">r = ${nf(row.r,3)} &middot; n = ${row.n}</span>
+    </div>
+    <div class="scat-legend">
+      <span><i style="background:#2e9e6b"></i>${fr?"Hausse du taux":"Rate hike"}</span>
+      <span><i style="background:#9aa2ad"></i>${fr?"Statu quo":"Hold"}</span>
+      <span><i style="background:#c0392b"></i>${fr?"Baisse du taux":"Rate cut"}</span>
+    </div>
+    ${svg}
+    <div style="text-align:center;font-size:11px;color:var(--muted);padding:4px 0 10px;">${
+      fr ? `y = variation du taux directeur (points de base) &middot; x = ${row.name} (${tLab})`
+         : `y = key rate change (basis points) &middot; x = ${row.name} (${tLab})`}</div>`;
+}
 function setLang(lang){
   LANG=lang;
   try{ localStorage.setItem("dl_lang", lang); }catch(e){}
@@ -1614,6 +1750,7 @@ function setLang(lang){
   if(state.view==="mission") renderMission();
   else if(state.view==="supervisor") renderSupervisor();
   else if(state.view==="recruiters") renderRecruiters();
+  else if(state.view==="correlation") renderCorrelation();
   else if(state.view==="series" && state.id){ refresh(); }
 }
 document.getElementById("langtoggle").addEventListener("click",e=>{
@@ -1669,6 +1806,95 @@ def write_features(data):
     print(f"features.csv : {len(months)} mois x {len(cols)} colonnes")
 
 
+# Inputs testes dans l'analyse de correlation : (id dataset, label de courbe ou None pour la courbe principale).
+CORR_INPUTS = [
+    ("inflation", "Inflation globale"), ("inflation", "Sous-jacente (core)"), ("pib", None),
+    ("output_gap_q", None), ("tuc", None), ("monia", None), ("m3", "M3"), ("brent", None),
+    ("eurusd", None), ("bce", "Depot"), ("fed", None), ("infl_ze", None), ("infl_us", None),
+    ("food", None), ("gepu", None), ("commerce", "Solde commercial"),
+    ("travail", "Taux de chômage"), ("debiteurs", "Taux global"), ("capi", None),
+    ("depots", "Dépôts à 12 mois"), ("icm", None), ("ipai", "IPAI global"),
+]
+
+
+def analyze_correlations(data):
+    """Pearson r entre chaque input candidat et la variation (en points de base) du taux directeur
+    a chaque reunion du Conseil. Point-in-time strict : la valeur de l'input prise est celle du mois
+    precedant la reunion (jamais le mois de la reunion elle-meme, pour eviter le look-ahead). Teste le
+    niveau et la variation sur 12 mois de l'input, garde la transformation la plus correlee. Renvoie
+    aussi les points bruts (x=input, y=variation en pb) pour le nuage de points cote client."""
+    import csv as _csv
+    import math
+    rows = [(r["date"], float(r["taux"])) for r in _csv.DictReader(open(DECISIONS_FILE, encoding="utf-8"))]
+    rows.sort()
+    # (mois de la reunion, variation du taux directeur en points de base a cette reunion)
+    meetings = [(rows[i][0][:7], round((rows[i][1] - rows[i - 1][1]) * 100)) for i in range(1, len(rows))]
+    ys_bps = [d for _, d in meetings]
+
+    def monthly_ff(points):
+        s = pd.Series({pd.Period(k, "M"): v for k, v in points.items()}).sort_index()
+        idx = pd.period_range(s.index.min(), s.index.max(), freq="M")
+        return s.reindex(idx).ffill()
+
+    def val_at(s, ym, lag=1):
+        return s.get(pd.Period(ym, "M") - lag, np.nan)
+
+    def pearson_r(xs, ys):
+        pairs = [(x, y) for x, y in zip(xs, ys) if x is not None and not (isinstance(x, float) and math.isnan(x))]
+        if len(pairs) < 8:
+            return None, len(pairs)
+        xa = np.array([p[0] for p in pairs]); ya = np.array([p[1] for p in pairs])
+        if xa.std() == 0 or ya.std() == 0:
+            return None, len(pairs)
+        return float(np.corrcoef(xa, ya)[0, 1]), len(pairs)
+
+    rows_out = []
+    for did, lab in CORR_INPUTS:
+        ds = data.get(did)
+        if not ds:
+            continue
+        line = (next((L for L in ds["lines"] if L["label"] == lab), None) if lab
+                else max(ds["lines"], key=lambda L: len(L["points"])))
+        if not line:
+            continue
+        s = monthly_ff(line["points"])
+        lvl = [val_at(s, ym) for ym, _ in meetings]
+        dlt = [val_at(s, ym) - val_at(s, ym, 13) for ym, _ in meetings]
+        r_lvl, n_lvl = pearson_r(lvl, ys_bps)
+        r_dlt, n_dlt = pearson_r(dlt, ys_bps)
+        if r_dlt is not None and (r_lvl is None or abs(r_dlt) >= abs(r_lvl)):
+            transform, r, n, xs = "yoy", r_dlt, n_dlt, dlt
+        else:
+            transform, r, n, xs = "level", r_lvl, n_lvl, lvl
+        if r is None:
+            continue
+        pts = [{"x": round(float(x), 4), "y": y} for x, y in zip(xs, ys_bps)
+                if x is not None and not (isinstance(x, float) and math.isnan(x))]
+        rows_out.append({"id": did, "lab": lab, "name": ds["name"] + (f" ({lab})" if lab else ""),
+                          "unit": ds["unit"], "transform": transform, "r": round(r, 3),
+                          "n": n, "points": pts})
+    rows_out.sort(key=lambda o: abs(o["r"]), reverse=True)
+    n_moves = sum(1 for v in ys_bps if v != 0)
+    return {"rows": rows_out, "n_meetings": len(meetings), "n_moves": n_moves}
+
+
+def translate_corr(corr, data_en):
+    """Traduit uniquement l'affichage (nom, unite) d'une analyse de correlation deja calculee,
+    en reutilisant les MEMES lignes/points/r que la version francaise (pas de recalcul, donc pas
+    de risque de desynchronisation entre langues)."""
+    out_rows = []
+    for row in corr["rows"]:
+        ds_en = data_en.get(row["id"])
+        if ds_en:
+            lab_en = LABEL_EN.get(row["lab"], row["lab"]) if row["lab"] else None
+            name = ds_en["name"] + (f" ({lab_en})" if lab_en else "")
+            unit = ds_en["unit"]
+        else:
+            name, unit = row["name"], row["unit"]
+        out_rows.append({**row, "name": name, "unit": unit})
+    return {"rows": out_rows, "n_meetings": corr["n_meetings"], "n_moves": corr["n_moves"]}
+
+
 def translate_data(data):
     """Deep copy de `data` avec name/unit/note/narrative/labels de courbe traduits en anglais.
     Fallback silencieux sur le francais si une traduction manque (jamais de texte casse)."""
@@ -1705,11 +1931,15 @@ def main():
     data = build_data()
     data_en = translate_data(data)
     taxo_en = translate_taxonomy(TAXONOMY)
+    corr = analyze_correlations(data)
+    corr_en = translate_corr(corr, data_en)
     html = (HTML
             .replace("__DATA__", json.dumps(data, ensure_ascii=False))
             .replace("__DATA_EN__", json.dumps(data_en, ensure_ascii=False))
             .replace("__TAXO__", json.dumps(TAXONOMY, ensure_ascii=False))
-            .replace("__TAXO_EN__", json.dumps(taxo_en, ensure_ascii=False)))
+            .replace("__TAXO_EN__", json.dumps(taxo_en, ensure_ascii=False))
+            .replace("__CORR__", json.dumps(corr, ensure_ascii=False))
+            .replace("__CORR_EN__", json.dumps(corr_en, ensure_ascii=False)))
     FICHIER.write_text(html, encoding="utf-8")
     write_features(data)
     # Documents servis en telechargement depuis la page "La demarche".
