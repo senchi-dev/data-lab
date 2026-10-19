@@ -16,6 +16,7 @@ import pandas as pd
 import requests
 
 from stats import compute_stats
+from theory import build_theory
 from narratives import NARRATIVES
 from narratives_en import NARRATIVES_EN
 from i18n_data import (SECTION_EN, GROUP_EN, UNIT_EN, NAME_EN, LABEL_EN, NOTES_EN,
@@ -891,6 +892,38 @@ HTML = r"""<!doctype html>
         margin:4px 0 24px; }
   .page .m-cta:hover{ opacity:.92; }
   @media (max-width:760px){ .page .m-steps{ grid-template-columns:1fr; } }
+  /* Page theorie du modele */
+  #theory{ max-width:900px; }
+  .th-toc{ display:flex; flex-wrap:wrap; gap:7px; margin:0 0 6px; }
+  .th-chip{ font:inherit; font-size:12px; font-weight:600; color:var(--ink); background:var(--accent-soft);
+        border:1px solid transparent; border-radius:20px; padding:6px 12px; cursor:pointer; }
+  .th-chip:hover{ border-color:var(--accent); color:var(--accent); }
+  .th-sec{ margin-top:38px; scroll-margin-top:14px; }
+  .th-sec h3{ font-size:19px; margin:0 0 12px; padding-bottom:9px; border-bottom:1px solid var(--line); color:var(--ink); }
+  .th-sec h4{ font-size:14.5px; margin:22px 0 7px; color:var(--ink); }
+  .th-sec p{ font-size:13.8px; line-height:1.75; color:var(--ink); margin:0 0 11px; max-width:780px; }
+  .th-sec ul, .th-sec ol{ margin:0 0 12px; padding-left:20px; }
+  .th-sec li{ font-size:13.6px; line-height:1.7; color:var(--ink); margin-bottom:7px; max-width:780px; }
+  .th-eq{ background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:8px;
+        padding:12px 16px; margin:12px 0 14px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+        font-size:13px; line-height:1.9; overflow-x:auto; white-space:pre; color:var(--ink); }
+  .th-sym{ display:grid; grid-template-columns:minmax(90px,max-content) 1fr; gap:6px 16px; margin:8px 0 14px;
+        padding:12px 16px; background:var(--accent-soft); border-radius:10px; }
+  .th-sym dt{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:13px; font-weight:700; color:var(--accent); }
+  .th-sym dd{ margin:0; font-size:13px; line-height:1.55; color:var(--ink); }
+  .th-call{ border-radius:10px; padding:12px 16px; margin:14px 0; border:1px solid var(--line); border-left-width:4px; background:var(--panel); }
+  .th-call > b{ display:block; font-size:12px; letter-spacing:.06em; text-transform:uppercase; margin-bottom:4px; }
+  .th-call p{ margin:0; font-size:13.4px; line-height:1.65; }
+  .th-warn{ border-left-color:#c2410c; } .th-warn > b{ color:#c2410c; }
+  .th-key{ border-left-color:var(--accent); } .th-key > b{ color:var(--accent); }
+  .th-note{ border-left-color:var(--muted); } .th-note > b{ color:var(--muted); }
+  .th-tbl{ overflow-x:auto; border:1px solid var(--line); border-radius:10px; margin:10px 0 16px; }
+  .th-tbl table{ width:100%; border-collapse:collapse; font-size:12.8px; }
+  .th-tbl th, .th-tbl td{ padding:8px 12px; text-align:left; vertical-align:top; border-bottom:1px solid var(--line); line-height:1.5; }
+  .th-tbl thead th{ background:var(--panel); color:var(--muted); font-weight:600; }
+  .th-tbl tbody tr:last-child td{ border-bottom:none; }
+  .th-sec p.th-small{ font-size:12px; color:var(--muted); font-style:italic; }
+  @media (max-width:760px){ .th-sym{ grid-template-columns:1fr; } }
   /* Page correlation : classement + nuage de points */
   #correlation{ max-width:960px; }
   .ct-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:12px; margin:6px 0 22px; }
@@ -996,6 +1029,7 @@ HTML = r"""<!doctype html>
     <section id="supervisor" class="page"></section>
     <section id="recruiters" class="page"></section>
     <section id="correlation" class="page"></section>
+    <section id="theory" class="page"></section>
     <div class="controls" id="controls">
       <div class="seg" id="gran"></div>
       <button class="btn" id="exp-series"></button>
@@ -1038,6 +1072,8 @@ const TAXO_FR = __TAXO__;
 const TAXO_EN = __TAXO_EN__;
 const CORR_FR = __CORR__;
 const CORR_EN = __CORR_EN__;
+const THEORY_FR = __THEORY_FR__;
+const THEORY_EN = __THEORY_EN__;
 function C(){ return LANG==="en" ? CORR_EN : CORR_FR; }
 let LANG = (function(){ try{ return localStorage.getItem("dl_lang")==="en" ? "en" : "fr"; }catch(e){ return "fr"; } })();
 function D(){ return LANG==="en" ? DATA_EN : DATA_FR; }
@@ -1055,6 +1091,7 @@ const UI = {
   navSupervisor: {fr:"Stage", en:"Internship"},
   navRecruiters: {fr:"Recrutement", en:"Recruiting"},
   navCorrelation: {fr:"Analyse de corrélation", en:"Correlation analysis"},
+  navTheory: {fr:"Théorie du modèle", en:"Model theory"},
   definition: {fr:"Définition", en:"Definition"},
   csvSeries: {fr:"CSV série", en:"Series CSV"},
   csvSeriesTitle: {fr:"Télécharger cette série en CSV", en:"Download this series as CSV"},
@@ -1361,6 +1398,7 @@ function buildNav(){
   nav.appendChild(mk("nav-supervisor","navSupervisor",()=>selectSupervisor()));
   nav.appendChild(mk("nav-recruiters","navRecruiters",()=>selectRecruiters()));
   nav.appendChild(mk("nav-correlation","navCorrelation",()=>selectCorrelation()));
+  nav.appendChild(mk("nav-theory","navTheory",()=>selectTheory()));
   // Sections du dispositif informationnel : uniquement les donnees disponibles
   for(const sec of T()){
     const wrap=document.createElement("div"); wrap.className="section";
@@ -1384,14 +1422,15 @@ function buildNav(){
 }
 function syncNav(){
   document.querySelectorAll(".item[data-id]").forEach(b=>b.classList.toggle("active", b.dataset.id===state.id && state.view==="series"));
-  const map={mission:"nav-home", supervisor:"nav-supervisor", recruiters:"nav-recruiters", correlation:"nav-correlation"};
+  const map={mission:"nav-home", supervisor:"nav-supervisor", recruiters:"nav-recruiters", correlation:"nav-correlation", theory:"nav-theory"};
   for(const v in map){ const el=document.getElementById(map[v]); if(el) el.classList.toggle("active", state.view===v); }
 }
-function showView(view){   // "mission" | "supervisor" | "recruiters" | "correlation" | "series"
+function showView(view){   // "mission" | "supervisor" | "recruiters" | "correlation" | "theory" | "series"
   document.getElementById("mission").style.display = view==="mission"?"block":"none";
   document.getElementById("supervisor").style.display = view==="supervisor"?"block":"none";
   document.getElementById("recruiters").style.display = view==="recruiters"?"block":"none";
   document.getElementById("correlation").style.display = view==="correlation"?"block":"none";
+  document.getElementById("theory").style.display = view==="theory"?"block":"none";
   for(const el of ["definition","controls","cmpbar","card","stats-hd","stats","statstable","ana-hd","analysis","foot"])
     document.getElementById(el).style.display = view==="series"?"":"none";
 }
@@ -1405,6 +1444,7 @@ function selectMission(){ state.view="mission"; syncNav(); clearHead(); renderMi
 function selectSupervisor(){ state.view="supervisor"; syncNav(); clearHead(); renderSupervisor(); showView("supervisor"); }
 function selectRecruiters(){ state.view="recruiters"; syncNav(); clearHead(); renderRecruiters(); showView("recruiters"); }
 function selectCorrelation(){ state.view="correlation"; syncNav(); clearHead(); renderCorrelation(); showView("correlation"); }
+function selectTheory(){ state.view="theory"; syncNav(); clearHead(); renderTheory(); showView("theory"); const m=document.querySelector("main"); if(m) m.scrollTop=0; }
 // Granularites autorisees selon la frequence NATIVE de la serie
 const FREQ_GRANS = { M:["M","Q","Y"], Q:["Q","Y"], A:["Y"] };
 function buildGran(){
@@ -1754,6 +1794,14 @@ function drawScatter(){
       fr ? `y = variation du taux directeur (points de base) &middot; x = ${row.name} (${tLab})`
          : `y = key rate change (basis points) &middot; x = ${row.name} (${tLab})`}</div>`;
 }
+function goTheory(id){ const el=document.getElementById("th-"+id); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); }
+function renderTheory(){
+  const th = LANG==="en" ? THEORY_EN : THEORY_FR;
+  const chip = s => s.title.split(":")[0];
+  const toc = '<div class="th-toc">' + th.sections.map(s=>`<button class="th-chip" onclick="goTheory('${s.id}')">${chip(s)}</button>`).join("") + '</div>';
+  const body = th.sections.map(s=>`<section class="th-sec" id="th-${s.id}"><h3>${s.title}</h3>${s.html}</section>`).join("");
+  document.getElementById("theory").innerHTML = pageShell(th.kicker, th.title, th.lead, toc + body);
+}
 function setLang(lang){
   LANG=lang;
   try{ localStorage.setItem("dl_lang", lang); }catch(e){}
@@ -1763,6 +1811,7 @@ function setLang(lang){
   else if(state.view==="supervisor") renderSupervisor();
   else if(state.view==="recruiters") renderRecruiters();
   else if(state.view==="correlation") renderCorrelation();
+  else if(state.view==="theory") renderTheory();
   else if(state.view==="series" && state.id){ refresh(); }
 }
 document.getElementById("langtoggle").addEventListener("click",e=>{
@@ -1938,6 +1987,21 @@ def translate_taxonomy(taxo):
     return out
 
 
+def decision_counts():
+    import csv as _c
+    rows = [(r["date"], float(r["taux"])) for r in _c.DictReader(open(DECISIONS_FILE, encoding="utf-8"))]
+    d = [rows[i][1] - rows[i - 1][1] for i in range(1, len(rows))]
+    hikes = sum(1 for x in d if x > 0)
+    cuts = sum(1 for x in d if x < 0)
+    holds = len(d) - hikes - cuts
+    moves = [x for x in d if x != 0]
+    pairs = len(moves) - 1
+    same = sum(1 for i in range(1, len(moves)) if (moves[i] > 0) == (moves[i - 1] > 0))
+    return {"N": len(d), "MOVES": hikes + cuts, "HIKES": hikes, "CUTS": cuts, "HOLDS": holds,
+            "HOLDPCT": round(100 * holds / len(d)), "LAST": rows[-1][0],
+            "PAIRS": pairs, "SAME": same, "SAMEPCT": round(100 * same / pairs)}
+
+
 def main():
     DEST.mkdir(parents=True, exist_ok=True)
     data = build_data()
@@ -1945,13 +2009,17 @@ def main():
     taxo_en = translate_taxonomy(TAXONOMY)
     corr = analyze_correlations(data)
     corr_en = translate_corr(corr, data_en)
+    counts = decision_counts()
+    theory = build_theory(counts)
     html = (HTML
             .replace("__DATA__", json.dumps(data, ensure_ascii=False))
             .replace("__DATA_EN__", json.dumps(data_en, ensure_ascii=False))
             .replace("__TAXO__", json.dumps(TAXONOMY, ensure_ascii=False))
             .replace("__TAXO_EN__", json.dumps(taxo_en, ensure_ascii=False))
             .replace("__CORR__", json.dumps(corr, ensure_ascii=False))
-            .replace("__CORR_EN__", json.dumps(corr_en, ensure_ascii=False)))
+            .replace("__CORR_EN__", json.dumps(corr_en, ensure_ascii=False))
+            .replace("__THEORY_FR__", json.dumps(theory["fr"], ensure_ascii=False))
+            .replace("__THEORY_EN__", json.dumps(theory["en"], ensure_ascii=False)))
     FICHIER.write_text(html, encoding="utf-8")
     write_features(data)
     # Documents servis en telechargement depuis la page "La demarche".
