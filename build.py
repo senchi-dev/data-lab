@@ -29,6 +29,7 @@ if not API_KEY:
 
 ROOT = Path(__file__).resolve().parent
 DATADIR = ROOT / "data"
+ASSETS = ROOT / "assets"
 MONIA_FILE = DATADIR / "MONIA.xlsx"
 INFLATION_FILE = DATADIR / "Inflation_BAM.xlsx"
 IPAI_FILE = DATADIR / "IPAI_BAM.xlsx"
@@ -48,8 +49,8 @@ DEBUT = "2006-01-01"
 DEST = ROOT / "public"
 FICHIER = DEST / "index.html"
 
-BLEU, ORANGE, VERT = "#2B4BFF", "#FF5A1F", "#0F9D74"
-ROUGE, VIOLET = "#E5173F", "#7A4DFF"
+BLEU, ORANGE, VERT = "#0092EF", "#F28C28", "#14A38B"
+ROUGE, VIOLET = "#E5484D", "#8B7CF0"
 
 # id -> (nom, SECTION, groupe, unite, decimales, agg, courbes)
 #   SECTION = grande categorie (bloc depliable de la sidebar). Pour ajouter d'autres
@@ -564,7 +565,7 @@ def build_data():
     directeur = load_directeur()
     data["directeur"] = {"name": "Taux directeur BAM (décisions du Conseil)", "section": "Décision de politique monétaire",
                          "group": "Cible", "unit": "%", "decimals": 2, "agg": "eop", "freq": "M",
-                         "lines": [{"label": "Taux directeur", "color": ROUGE, "points": directeur}],
+                         "lines": [{"label": "Taux directeur", "color": BLEU, "points": directeur}],
                          "last_decision": _last_decision_date()}
     print(f"{'Taux directeur BAM':<30} {'directeur':<12} {len(directeur)} mois  (Historique des décisions BAM)")
 
@@ -798,22 +799,24 @@ HTML = r"""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Data Lab</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232f3742'/%3E%3Ctext x='16' y='21' font-family='Arial,sans-serif' font-size='14' font-weight='bold' fill='white' text-anchor='middle'%3EDL%3C/text%3E%3C/svg%3E">
-<meta name="theme-color" content="#F4F4F5">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2300294D'/%3E%3Ctext x='16' y='21' font-family='Arial,sans-serif' font-size='14' font-weight='bold' fill='white' text-anchor='middle'%3EDL%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#00294D">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Inter+Tight:wght@400..700&display=swap" rel="stylesheet">
-<meta name="description" content="Data Lab, an independent research tool tracking the inputs behind Bank Al-Maghrib's monetary policy decisions.">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+<meta name="description" content="Data Lab, an internship research project tracking the inputs behind Bank Al-Maghrib's monetary policy decisions. Not an official BMCE Capital publication.">
 <style>
   :root{
-    --bg:#F4F4F5; --panel:#FFFFFF; --ink:#0B0B0D; --muted:#6C6E75; --line:#E2E2E5;
-    --accent:#2B4BFF; --accent-soft:#ECEEFF; --hike:#FF4A1C; --hl:#FFE94D;
-    --display:"Bricolage Grotesque","Inter Tight",system-ui,sans-serif;
-    --body:"Inter Tight",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --bg:#F3F6FA; --panel:#FFFFFF; --ink:#00294D; --muted:#5E7189; --line:#DCE4EC;
+    --accent:#0079C9; --accent-soft:#E4F2FC; --blue:#0092EF; --navy:#00294D; --hike:#E8661F; --hl:#BFE3FB;
+    --display:"Bricolage Grotesque","Lato",system-ui,sans-serif;
+    --body:"Lato",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --pt:clamp(84px,9vw,116px);
+    --logo-white:url("data:image/png;base64,__LOGO_W__"); --logo-dark:url("data:image/png;base64,__LOGO_D__");
   }
   @media (prefers-color-scheme: dark){
-    :root{ --bg:#0B0B0D; --panel:#141417; --ink:#F3F3F1; --muted:#9A9CA4; --line:#26262B;
-           --accent:#7C8DFF; --accent-soft:#1B1F3D; --hike:#FF6A45; --hl:#FFE94D; }
+    :root{ --bg:#00172D; --panel:#00294D; --ink:#EAF3FB; --muted:#93A9BF; --line:#123C63;
+           --accent:#3AA9F5; --accent-soft:#0A3A66; --navy:#001F3A; --hike:#FF8A4C; --hl:#BFE3FB; }
   }
   *{ box-sizing:border-box; }
   body{ margin:0; font-family:var(--body); background:var(--bg); color:var(--ink); }
@@ -1056,8 +1059,8 @@ HTML = r"""<!doctype html>
   #analysis .prose p{ font-size:17px; line-height:1.72; }
   #analysis .auto{ background:var(--ink); color:var(--bg); border-left:0; border-radius:20px; padding:20px 24px; font-size:15.5px; line-height:1.6; max-width:68ch; margin-bottom:26px; }
   .foot{ margin-top:34px; }
-  .dl-draw{ animation:dl-draw 1s cubic-bezier(.65,0,.35,1) forwards; }
-  @keyframes dl-draw{ to{ stroke-dashoffset:0; } }
+  .dl-draw{ stroke-dasharray:1; stroke-dashoffset:0; animation:dl-draw 1s cubic-bezier(.65,0,.35,1) both; }
+  @keyframes dl-draw{ from{ stroke-dashoffset:1; } to{ stroke-dashoffset:0; } }
   .dl-fade{ animation:dl-fade 1.3s ease both; }
   @keyframes dl-fade{ from{ opacity:0; } to{ opacity:1; } }
   #tip{ border-radius:14px; padding:10px 14px; }
@@ -1130,10 +1133,36 @@ HTML = r"""<!doctype html>
   @media (max-width:820px){ .stats{ grid-template-columns:repeat(2,1fr); } }
   @media (max-width:720px){ #definition{ grid-template-columns:1fr; } .head h2{ max-width:none; } #dock button{ padding:10px 12px; } }
   @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+
+  /* ===== Brand layer : BMCE Capital (marine #00294D, bleu #0092EF, Lato) ===== */
+  body{ overflow-x:clip; }
+  ::selection{ background:var(--hl); color:#00294D; }
+  main{ padding-top:var(--pt); }
+  .topbar{ position:absolute; top:0; left:0; right:0; z-index:20; pointer-events:none; }
+  .topbar-in{ max-width:1240px; margin:0 auto; padding:26px clamp(18px,4vw,56px) 0; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .logo{ display:block; width:186px; height:33px; background:var(--logo-dark) left center/contain no-repeat; pointer-events:auto; }
+  body[data-view="mission"] .logo{ background-image:var(--logo-white); }
+  .top-tag{ font-size:13px; font-weight:700; color:var(--muted); pointer-events:auto; }
+  body[data-view="mission"] .top-tag{ color:rgba(255,255,255,.72); }
+  @media (prefers-color-scheme: dark){ .logo{ background-image:var(--logo-white); } }
+  #dock .langtoggle button.on{ background:var(--blue); color:#fff; }
+  #dock{ box-shadow:0 0 0 1px rgba(255,255,255,.18), 0 20px 56px rgba(0,0,0,.30); }
+  .ix-item:hover, .ix-item.active{ color:#00294D; }
+  .hero{ --ink:#FFFFFF; --muted:rgba(255,255,255,.66); --line:rgba(255,255,255,.14); --bg:var(--navy); --accent:#0092EF; --hike:#FF8A4C;
+         background:var(--navy); color:#FFFFFF; margin:calc(var(--pt) * -1) calc(50% - 50vw) clamp(70px,9vw,130px);
+         padding:calc(var(--pt) + 14px) 0 clamp(48px,6vw,84px); }
+  .hero-in{ max-width:1240px; margin:0 auto; padding:0 clamp(18px,4vw,56px); }
+  .hero-disc{ margin:38px 0 0; font-size:12.5px; line-height:1.55; color:var(--muted); max-width:72ch; }
+  .page .m-kicker::before{ box-shadow:0 0 0 1.5px var(--ink); }
+  .head h2, .page .m-title, .sec-hd{ color:var(--ink); }
 </style>
 </head>
 <body>
 <div class="app">
+  <header class="topbar"><div class="topbar-in">
+    <a class="logo" href="#" onclick="selectMission();return false;" role="img" aria-label="BMCE Capital"></a>
+    <span class="top-tag" id="top-tag"></span>
+  </div></header>
   <nav id="dock" aria-label="Navigation">
     <div class="dock-items" id="dock-items"></div>
     <span class="sep"></span>
@@ -1237,6 +1266,7 @@ const UI = {
   navCorrelation: {fr:"Analyse de corrélation", en:"Correlation analysis"},
   navTheory: {fr:"Théorie du modèle", en:"Model theory"},
   navIndex: {fr:"Indicateurs", en:"Indicators"},
+  topTag: {fr:"Projet de recherche de stage", en:"Internship research project"},
   searchPh: {fr:"Chercher un indicateur", en:"Search an indicator"},
   closeTitle: {fr:"Fermer", en:"Close"},
   prevTitle: {fr:"Indicateur précédent", en:"Previous indicator"},
@@ -1437,7 +1467,7 @@ function draw(){
     const d=s.pts.map((p,i)=>(i?"L":"M")+X(p.t).toFixed(1)+" "+Y(p.v).toFixed(1)).join(" ");
     const at={d,fill:"none",stroke:s.color,"stroke-width":2.4,"stroke-linejoin":"round","stroke-linecap":"round"};
     if(s.dashed) at["stroke-dasharray"]="5 4";
-    else if(animate){ at.pathLength="1"; at["stroke-dasharray"]="1"; at["stroke-dashoffset"]="1"; at["class"]="dl-draw"; }
+    else if(animate){ at.pathLength="1"; at["class"]="dl-draw"; }
     add("path",at);
   }
   // hover layer
@@ -1610,6 +1640,7 @@ function syncNav(){
 }
 function showView(view){   // "mission" | "supervisor" | "recruiters" | "correlation" | "theory" | "series"
   closeIndex();
+  document.body.dataset.view=view;
   document.getElementById("mission").style.display = view==="mission"?"block":"none";
   document.getElementById("supervisor").style.display = view==="supervisor"?"block":"none";
   document.getElementById("recruiters").style.display = view==="recruiters"?"block":"none";
@@ -1643,6 +1674,7 @@ function buildGran(){
 }
 function applyChromeText(){
   document.getElementById("sidebar-sub").textContent = t("sidebarSub");
+  document.getElementById("top-tag").textContent=t("topTag");
   const ixq=document.getElementById("ix-q"); if(ixq) ixq.placeholder=t("searchPh");
   document.getElementById("ix-close").title=t("closeTitle");
   document.getElementById("prev").title=t("prevTitle"); document.getElementById("next").title=t("nextTitle");
@@ -1722,7 +1754,7 @@ function pageShell(kicker,title,lead,bodyHtml){
 let HERO_PLAYED=false, heroRAF=0;
 function heroHtml(){
   const fr=LANG!=="en";
-  return `<section class="hero">
+  return `<section class="hero"><div class="hero-in">
     <h1 class="hero-h">${fr?"Pourquoi <span class=\"nw\">Bank Al-Maghrib</span> bouge son taux.":"Why <span class=\"nw\">Bank Al-Maghrib</span> moves its rate."}</h1>
     <div class="hero-fig"><span class="hero-num" id="hn">&nbsp;</span><span class="hero-cap"><b id="hd"></b><span id="hm"></span></span></div>
     <div class="stairwrap" id="stairwrap">
@@ -1743,7 +1775,8 @@ function heroHtml(){
       </div>
       <button class="m-cta" onclick="openIndex()">${fr?"Explorer les indicateurs":"Explore the indicators"}</button>
     </div>
-  </section>`;
+    <p class="hero-disc">${fr?"Projet de recherche réalisé dans le cadre d'un stage chez BMCE Capital. Ce n'est pas une publication officielle de BMCE Capital ; les analyses engagent leur seul auteur.":"Research project carried out during an internship at BMCE Capital. This is not an official BMCE Capital publication; the analysis is the author's own."}</p>
+  </div></section>`;
 }
 function initHero(){
   const m=D().directeur; if(!m) return;
@@ -2270,6 +2303,11 @@ def translate_taxonomy(taxo):
     return out
 
 
+def _b64(path):
+    import base64
+    return base64.b64encode(Path(path).read_bytes()).decode("ascii")
+
+
 def _last_decision_date():
     import csv as _c
     return [r["date"] for r in _c.DictReader(open(DECISIONS_FILE, encoding="utf-8"))][-1]
@@ -2307,7 +2345,9 @@ def main():
             .replace("__CORR__", json.dumps(corr, ensure_ascii=False))
             .replace("__CORR_EN__", json.dumps(corr_en, ensure_ascii=False))
             .replace("__THEORY_FR__", json.dumps(theory["fr"], ensure_ascii=False))
-            .replace("__THEORY_EN__", json.dumps(theory["en"], ensure_ascii=False)))
+            .replace("__THEORY_EN__", json.dumps(theory["en"], ensure_ascii=False))
+            .replace("__LOGO_W__", _b64(ASSETS / "bmce-capital-logo-white.png"))
+            .replace("__LOGO_D__", _b64(ASSETS / "bmce-capital-logo-dark.png")))
     FICHIER.write_text(html, encoding="utf-8")
     write_features(data)
     # Documents servis en telechargement depuis la page "La demarche".
