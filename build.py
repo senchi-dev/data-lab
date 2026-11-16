@@ -48,8 +48,8 @@ DEBUT = "2006-01-01"
 DEST = ROOT / "public"
 FICHIER = DEST / "index.html"
 
-BLEU, ORANGE, VERT = "#2563a8", "#e07b39", "#2e9e6b"
-ROUGE, VIOLET = "#c0392b", "#7c5cbf"
+BLEU, ORANGE, VERT = "#2B4BFF", "#FF5A1F", "#0F9D74"
+ROUGE, VIOLET = "#E5173F", "#7A4DFF"
 
 # id -> (nom, SECTION, groupe, unite, decimales, agg, courbes)
 #   SECTION = grande categorie (bloc depliable de la sidebar). Pour ajouter d'autres
@@ -416,7 +416,7 @@ def load_cereales():
     for p in j["periods"]:                          # '2015-2016'
         an2 = p.split("-")[1]
         for lab, cid in types.items():
-            c = j["data"].get(f"{cid}.4690_{p}")
+            c = j["data"].get(f"{cid}.4690_{p}") or j["data"].get(f"{cid}_{p}")   # l'API a retire le code region des cles
             if c and c["value"] not in (None, ""):
                 out[lab][f"{an2}-05"] = round(_hcp_num(c["value"]) / 1000, 1)   # milliers -> millions quintaux
     return out
@@ -564,7 +564,8 @@ def build_data():
     directeur = load_directeur()
     data["directeur"] = {"name": "Taux directeur BAM (décisions du Conseil)", "section": "Décision de politique monétaire",
                          "group": "Cible", "unit": "%", "decimals": 2, "agg": "eop", "freq": "M",
-                         "lines": [{"label": "Taux directeur", "color": ROUGE, "points": directeur}]}
+                         "lines": [{"label": "Taux directeur", "color": ROUGE, "points": directeur}],
+                         "last_decision": _last_decision_date()}
     print(f"{'Taux directeur BAM':<30} {'directeur':<12} {len(directeur)} mois  (Historique des décisions BAM)")
 
     # --- Sources nationales (fichiers locaux BAM) ---
@@ -798,54 +799,24 @@ HTML = r"""<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Data Lab</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232f3742'/%3E%3Ctext x='16' y='21' font-family='Arial,sans-serif' font-size='14' font-weight='bold' fill='white' text-anchor='middle'%3EDL%3C/text%3E%3C/svg%3E">
-<meta name="theme-color" content="#2563a8">
+<meta name="theme-color" content="#F4F4F5">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Inter+Tight:wght@400..700&display=swap" rel="stylesheet">
 <meta name="description" content="Data Lab, an independent research tool tracking the inputs behind Bank Al-Maghrib's monetary policy decisions.">
 <style>
   :root{
-    --bg:#f6f7f9; --panel:#ffffff; --ink:#1a1d21; --muted:#6b7280;
-    --line:#e6e8eb; --accent:#2563a8; --accent-soft:#eaf1f9;
+    --bg:#F4F4F5; --panel:#FFFFFF; --ink:#0B0B0D; --muted:#6C6E75; --line:#E2E2E5;
+    --accent:#2B4BFF; --accent-soft:#ECEEFF; --hike:#FF4A1C; --hl:#FFE94D;
+    --display:"Bricolage Grotesque","Inter Tight",system-ui,sans-serif;
+    --body:"Inter Tight",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   }
   @media (prefers-color-scheme: dark){
-    :root{ --bg:#14171b; --panel:#1c2026; --ink:#e8eaed; --muted:#9aa2ad;
-           --line:#2b3038; --accent:#5b9bd5; --accent-soft:#22303f; }
+    :root{ --bg:#0B0B0D; --panel:#141417; --ink:#F3F3F1; --muted:#9A9CA4; --line:#26262B;
+           --accent:#7C8DFF; --accent-soft:#1B1F3D; --hike:#FF6A45; --hl:#FFE94D; }
   }
   *{ box-sizing:border-box; }
-  body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-        background:var(--bg); color:var(--ink); }
-  .app{ display:grid; grid-template-columns:288px 1fr; height:100vh; }
-  aside{ background:var(--panel); border-right:1px solid var(--line); padding:22px 16px;
-         overflow-y:auto; min-height:0; }
-  .brand{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 4px 4px; }
-  .brand-word{ font-size:16px; font-weight:800; letter-spacing:-.01em; color:var(--ink); }
-  .langtoggle{ display:inline-flex; background:var(--bg); border:1px solid var(--line);
-        border-radius:8px; overflow:hidden; flex:0 0 auto; }
-  .langtoggle button{ border:0; background:transparent; color:var(--muted); font-size:11px;
-        font-weight:700; letter-spacing:.03em; padding:5px 9px; cursor:pointer; }
-  .langtoggle button.on{ background:var(--accent); color:#fff; }
-  aside .sub{ font-size:11.5px; color:var(--muted); margin:6px 4px 18px; }
-  .section-hd{ display:flex; align-items:center; gap:8px; width:100%; border:0; cursor:pointer;
-        background:transparent; color:var(--ink); font-size:12.5px; font-weight:700;
-        letter-spacing:.03em; text-transform:uppercase; padding:11px 8px; border-radius:9px;
-        margin-top:8px; }
-  .section-hd:hover{ background:var(--accent-soft); }
-  .chev{ transition:transform .15s; font-size:10px; color:var(--muted); }
-  .section.collapsed .chev{ transform:rotate(-90deg); }
-  .section.collapsed .section-body{ display:none; }
-  .navcat{ font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
-         color:var(--muted); margin:14px 8px 4px; }
-  .navcat.soon{ margin-top:16px; }
-  .item{ display:flex; align-items:flex-start; gap:9px; width:100%; text-align:left; border:0;
-         background:transparent; color:var(--ink); padding:7px 11px; border-radius:9px;
-         font-size:13px; cursor:pointer; transition:background .12s; line-height:1.4; }
-  .item:hover{ background:var(--accent-soft); }
-  .item.active{ background:var(--accent); color:#fff; font-weight:600; }
-  .item.home{ font-weight:600; margin-bottom:10px; }
-  .item.home .ilab{ margin-left:2px; }
-  .dotstat{ width:7px; height:7px; border-radius:50%; flex:0 0 auto; margin-top:6px; }
-  .dotstat.on{ background:var(--accent); }
-  .dotstat.off{ border:1.5px solid var(--muted); }
-  .item.active .dotstat.on{ background:#fff; }
-  .ilab{ flex:1; }
+  body{ margin:0; font-family:var(--body); background:var(--bg); color:var(--ink); }
   #source{ color:var(--muted); font-size:11.5px; margin-top:5px; }
   /* Accueil : la mission / l'exercice */
   .page{ display:none; max-width:860px; }
@@ -950,7 +921,6 @@ HTML = r"""<!doctype html>
   #definition{ background:var(--accent-soft); border-radius:12px; padding:4px 18px 14px; margin:16px 0 4px; }
   #definition .sec-hd{ margin:14px 0 6px; }
   #definition p{ font-size:13.5px; line-height:1.6; color:var(--ink); margin:0; max-width:760px; }
-  main{ padding:26px 30px; overflow-y:auto; min-height:0; }
   .head{ display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; }
   .head h2{ margin:0; font-size:21px; }
   .unit{ color:var(--muted); font-size:13px; }
@@ -998,28 +968,201 @@ HTML = r"""<!doctype html>
   #analysis .auto{ background:var(--accent-soft); border-left:3px solid var(--accent);
         border-radius:0 9px 9px 0; padding:11px 14px; font-size:13px; margin-bottom:12px; }
   #analysis .prose p{ font-size:13.5px; line-height:1.62; color:var(--ink); margin:0 0 10px; }
+
+  /* ===== Design layer : editorial, grande typo, dock flottant ===== */
+  [hidden]{ display:none !important; }
+  body{ -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; letter-spacing:-.005em; }
+  body.noscroll{ overflow:hidden; }
+  ::selection{ background:var(--hl); color:#0B0B0D; }
+  button{ font-family:inherit; }
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:6px; }
+  .app{ display:block; }
+  main{ max-width:1240px; margin:0 auto; padding:clamp(28px,5vw,64px) clamp(18px,4vw,56px) 170px; }
+
+  /* Dock flottant */
+  #dock{ position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:70; display:flex; align-items:center;
+         gap:6px; max-width:calc(100vw - 20px); background:var(--ink); color:var(--bg); padding:6px; border-radius:999px;
+         box-shadow:0 20px 56px rgba(0,0,0,.30); }
+  .dock-items{ display:flex; gap:2px; overflow-x:auto; min-width:0; scrollbar-width:none; }
+  .dock-items::-webkit-scrollbar{ display:none; }
+  #dock button{ border:0; background:transparent; color:inherit; font-size:13.5px; font-weight:600; padding:10px 16px;
+         border-radius:999px; cursor:pointer; white-space:nowrap; opacity:.7; transition:background .2s, opacity .2s, color .2s; }
+  #dock button:hover{ opacity:1; background:rgba(128,128,128,.24); }
+  #dock button.active{ background:var(--bg); color:var(--ink); opacity:1; }
+  #dock .mark{ font-family:var(--display); font-weight:800; font-size:16px; letter-spacing:-.04em; opacity:1; padding:10px 14px; }
+  #dock .sep{ width:1px; height:20px; background:currentColor; opacity:.22; flex:0 0 auto; }
+  .langtoggle{ display:inline-flex; flex:0 0 auto; }
+  #dock .langtoggle button{ padding:8px 11px; font-size:12px; letter-spacing:.02em; }
+  #dock .langtoggle button.on{ background:var(--hl); color:#0B0B0D; opacity:1; }
+
+  /* Index plein ecran */
+  #index{ position:fixed; inset:0; z-index:60; overflow-y:auto; padding:26px clamp(20px,5vw,72px) 140px;
+          background:color-mix(in srgb, var(--bg) 93%, transparent); -webkit-backdrop-filter:blur(22px); backdrop-filter:blur(22px);
+          opacity:0; visibility:hidden; transform:translateY(16px);
+          transition:opacity .28s ease, transform .4s cubic-bezier(.2,.8,.2,1), visibility 0s linear .4s; }
+  #index.open{ opacity:1; visibility:visible; transform:none; transition-delay:0s; }
+  .ix-top{ display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+  .ix-search{ flex:1; max-width:560px; font:inherit; font-size:16px; color:var(--ink); background:var(--panel);
+          border:1px solid var(--line); border-radius:999px; padding:13px 20px; outline:none; }
+  .ix-search:focus{ border-color:var(--ink); }
+  .ix-close{ margin-left:auto; width:46px; height:46px; border-radius:50%; border:1px solid var(--line); background:var(--panel);
+          color:var(--ink); cursor:pointer; display:grid; place-items:center; transition:background .2s,color .2s; }
+  .ix-close:hover{ background:var(--ink); color:var(--bg); }
+  .ix-sub{ margin:0 0 6px; max-width:60ch; font-size:14px; color:var(--muted); line-height:1.5; }
+  .ix-sec h3{ font-family:var(--display); font-weight:760; font-size:clamp(28px,4.6vw,60px); letter-spacing:-.045em; line-height:1; margin:42px 0 16px; }
+  .ix-list{ columns:2 360px; column-gap:48px; }
+  .ix-item{ position:relative; z-index:0; display:block; break-inside:avoid; width:100%; text-align:left; border:0; background:none;
+          color:var(--ink); font-size:clamp(19px,2.3vw,32px); font-weight:560; letter-spacing:-.02em; line-height:1.3;
+          padding:6px 8px; margin-left:-8px; cursor:pointer; transition:color .15s; }
+  .ix-item::before{ content:""; position:absolute; inset:2px 0; background:var(--hl); border-radius:8px; z-index:-1;
+          transform:scaleX(0); transform-origin:left; transition:transform .32s cubic-bezier(.2,.8,.2,1); }
+  .ix-item:hover::before, .ix-item.active::before{ transform:scaleX(1); }
+  .ix-item:hover, .ix-item.active{ color:#0B0B0D; }
+  #index.open .ix-item{ animation:ixIn .55s cubic-bezier(.2,.8,.2,1) both; animation-delay:calc(var(--i) * 16ms + 120ms); }
+  @keyframes ixIn{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:none; } }
+
+  /* En-tete de serie */
+  .head{ display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap; margin-bottom:6px; }
+  .head h2{ margin:0; font-family:var(--display); font-weight:760; font-size:clamp(36px,6.2vw,92px); line-height:.96; letter-spacing:-.045em; max-width:18ch; }
+  .head-r{ display:flex; align-items:center; gap:12px; }
+  .unit{ border:1px solid var(--line); background:var(--panel); color:var(--ink); border-radius:999px; padding:7px 15px; font-size:13px; font-weight:600; }
+  .stepper{ display:flex; gap:8px; }
+  .stepper button{ width:46px; height:46px; border-radius:50%; border:1px solid var(--line); background:var(--panel); color:var(--ink);
+          cursor:pointer; display:grid; place-items:center; transition:background .2s, color .2s, border-color .2s; }
+  .stepper button:hover{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  #source{ margin-top:18px; font-size:13.5px; color:var(--muted); }
+  #definition{ background:none; border-radius:0; border-top:1px solid var(--line); padding:22px 0 0; margin:34px 0 6px;
+          display:grid; grid-template-columns:150px 1fr; gap:10px 32px; }
+  #definition .sec-hd{ margin:3px 0 0; font-family:var(--body); font-size:13px; font-weight:600; letter-spacing:0; color:var(--muted); }
+  #definition p{ font-size:clamp(16px,1.5vw,19px); line-height:1.6; max-width:68ch; letter-spacing:-.01em; }
+  .controls{ margin:30px 0 12px; gap:10px; }
+  #cmpbar{ margin:4px 0 16px; }
+  .ctl-lab{ font-size:13px; }
+  .seg{ border-radius:999px; padding:3px; gap:2px; background:var(--panel); }
+  .seg button{ border-radius:999px; padding:8px 16px; font-weight:600; transition:background .2s, color .2s; }
+  .seg button.on{ background:var(--ink); color:var(--bg); }
+  .btn{ border-radius:999px; padding:9px 16px; font-weight:600; transition:background .2s, color .2s, border-color .2s; }
+  .btn:hover{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .sel{ border-radius:999px; padding:9px 16px; }
+  .card{ border-radius:30px; padding:24px 14px 10px; }
+  .legend{ padding:6px 22px 16px; }
+  .sec-hd{ font-family:var(--display); font-size:clamp(26px,3.2vw,42px); font-weight:730; letter-spacing:-.04em; margin:76px 0 18px; }
+  .stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:0 28px; margin-top:8px; }
+  .stat{ border-top:1px solid var(--line); padding:14px 0 24px; font-size:13px; }
+  .stat b{ font-family:var(--display); font-size:clamp(28px,3.2vw,44px); font-weight:730; letter-spacing:-.045em; margin:8px 0 4px; font-variant-numeric:tabular-nums; }
+  .tbl-wrap{ border-radius:20px; }
+  #analysis{ max-width:none; }
+  #analysis .prose{ max-width:68ch; }
+  #analysis .prose p{ font-size:17px; line-height:1.72; }
+  #analysis .auto{ background:var(--ink); color:var(--bg); border-left:0; border-radius:20px; padding:20px 24px; font-size:15.5px; line-height:1.6; max-width:68ch; margin-bottom:26px; }
+  .foot{ margin-top:34px; }
+  .dl-draw{ animation:dl-draw 1s cubic-bezier(.65,0,.35,1) forwards; }
+  @keyframes dl-draw{ to{ stroke-dashoffset:0; } }
+  .dl-fade{ animation:dl-fade 1.3s ease both; }
+  @keyframes dl-fade{ from{ opacity:0; } to{ opacity:1; } }
+  #tip{ border-radius:14px; padding:10px 14px; }
+
+  /* Pages */
+  .page{ max-width:1000px; }
+  #mission{ max-width:none; }
+  .m-rest{ max-width:1000px; }
+  .page .m-kicker{ text-transform:none; letter-spacing:0; font-size:14px; font-weight:600; color:var(--muted);
+          display:flex; align-items:center; gap:9px; margin:0 0 16px; }
+  .page .m-kicker::before{ content:""; width:9px; height:9px; border-radius:50%; background:var(--hl); box-shadow:0 0 0 1.5px var(--ink); }
+  .page .m-title{ font-family:var(--display); font-weight:760; font-size:clamp(34px,5.4vw,78px); line-height:.98; letter-spacing:-.045em; max-width:17ch; margin:0 0 24px; }
+  .page .m-lead{ font-size:clamp(17px,1.7vw,21px); line-height:1.55; letter-spacing:-.012em; color:var(--ink); max-width:60ch; margin-bottom:44px; }
+  .page .m-steps{ gap:30px; margin-bottom:44px; }
+  .page .m-step{ background:none; border:0; border-top:2px solid var(--ink); border-radius:0; padding:16px 0 0; }
+  .page .m-num{ background:none; padding:0; border-radius:0; color:var(--muted); font-size:14px; font-weight:600; }
+  .page .m-step b{ font-family:var(--display); font-size:22px; letter-spacing:-.03em; font-weight:720; }
+  .page .m-step p{ font-size:15px; line-height:1.6; }
+  .page .m-source{ background:var(--panel); border:1px solid var(--line); border-radius:26px; padding:26px 30px; margin-bottom:22px; }
+  .page .m-source-hd{ text-transform:none; letter-spacing:0; font-size:14px; font-weight:600; color:var(--muted); }
+  .page .m-source p{ font-size:15.5px; line-height:1.7; }
+  .page .m-doc{ border:1px solid var(--line); border-radius:26px; background:var(--panel); }
+  .page .m-doc:hover{ box-shadow:none; transform:none; border-color:var(--ink); }
+  .page .m-doc-ico{ background:var(--ink); color:var(--bg); border-radius:12px; }
+  .page .m-notes{ border-top:1px solid var(--line); padding-top:22px; }
+  .page .m-notes-hd{ text-transform:none; letter-spacing:0; font-size:14px; font-weight:600; color:var(--muted); }
+  .page .m-notes li{ font-size:15px; line-height:1.7; }
+  .page .m-badge{ background:var(--panel); border:1px solid var(--line); }
+  .page .m-cta{ display:inline-flex; align-items:center; gap:16px; background:var(--ink); color:var(--bg); border:0; border-radius:999px;
+          padding:8px 8px 8px 24px; font-size:15px; font-weight:650; cursor:pointer; text-decoration:none; margin:6px 0 28px; transition:transform .25s; }
+  .page .m-cta:hover{ opacity:1; transform:translateY(-2px); }
+  .page .m-cta::after{ content:""; width:36px; height:36px; border-radius:50%; flex:0 0 auto;
+          background:var(--hl) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230B0B0D' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E") center/17px no-repeat; }
+  .th-sec{ margin-top:80px; }
+  .th-sec h3{ font-family:var(--display); font-size:clamp(26px,3.4vw,46px); letter-spacing:-.04em; font-weight:740; border-bottom:0; padding-bottom:0; margin-bottom:18px; }
+  .th-sec h4{ font-family:var(--display); font-size:19px; letter-spacing:-.025em; font-weight:700; }
+  .th-sec p, .th-sec li{ font-size:15.5px; line-height:1.75; }
+  .th-chip{ background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:8px 15px; transition:background .2s, color .2s; }
+  .th-chip:hover{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .th-eq, .th-call, .th-tbl, .th-sym{ border-radius:18px; }
+
+  /* Hero : l'escalier du taux directeur */
+  .hero{ margin:0 0 clamp(70px,9vw,130px); }
+  .hero-h{ font-family:var(--display); font-weight:780; font-size:clamp(46px,9vw,146px); line-height:.92; letter-spacing:-.055em;
+          margin:0 0 clamp(22px,3.4vw,44px); max-width:13ch; }
+  .nw{ white-space:nowrap; }
+  .hero-fig{ display:flex; align-items:flex-end; gap:16px 30px; flex-wrap:wrap; margin-bottom:10px; }
+  .hero-num{ font-family:var(--display); font-weight:780; font-size:clamp(72px,14vw,224px); line-height:.82; letter-spacing:-.065em;
+          font-variant-numeric:tabular-nums; min-width:5.4ch; }
+  .hero-cap{ display:flex; flex-direction:column; gap:3px; font-size:15px; color:var(--muted); padding-bottom:12px; max-width:32ch; line-height:1.4; }
+  .hero-cap b{ color:var(--ink); font-weight:650; font-size:17px; letter-spacing:-.01em; }
+  .stairwrap{ position:relative; margin-top:10px; cursor:crosshair; touch-action:pan-y; }
+  .stair{ width:100%; height:clamp(200px,30vw,370px); display:block; overflow:visible; }
+  .stdots{ position:absolute; inset:0; pointer-events:none; }
+  .mk{ position:absolute; width:13px; height:13px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 3px var(--bg);
+          transform:translate(-50%,-50%) scale(0); transition:transform .4s cubic-bezier(.3,1.7,.5,1); }
+  .mk.up{ background:var(--hike); }
+  .mk.on{ transform:translate(-50%,-50%) scale(1); }
+  .stcur{ position:absolute; top:0; bottom:0; width:1.5px; margin-left:-.75px; background:var(--ink); opacity:0; pointer-events:none; transition:opacity .15s; }
+  .stcur.on{ opacity:.85; }
+  .stair-axis{ position:relative; height:26px; margin-top:10px; }
+  .stair-axis span{ position:absolute; transform:translateX(-50%); font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .hero-foot{ display:flex; align-items:center; justify-content:space-between; gap:22px; flex-wrap:wrap; margin-top:26px; }
+  .hero-note{ margin:0; font-size:14px; line-height:1.55; color:var(--muted); max-width:58ch; }
+  .hero-key{ display:inline-flex; gap:18px; margin-top:10px; font-size:13px; color:var(--muted); }
+  .hero-key span{ display:inline-flex; align-items:center; gap:7px; }
+  .hero-key i{ width:10px; height:10px; border-radius:50%; background:var(--accent); display:inline-block; }
+  .hero-key i.up{ background:var(--hike); }
+
+  @media (max-width:820px){ .stats{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:720px){ #definition{ grid-template-columns:1fr; } .head h2{ max-width:none; } #dock button{ padding:10px 12px; } }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
 </style>
 </head>
 <body>
 <div class="app">
-  <aside>
-    <div class="brand">
-      <span class="brand-word">Data Lab</span>
-      <div class="langtoggle" id="langtoggle">
-        <button data-lang="fr">FR</button>
-        <button data-lang="en">EN</button>
-      </div>
+  <nav id="dock" aria-label="Navigation">
+    <div class="dock-items" id="dock-items"></div>
+    <span class="sep"></span>
+    <div class="langtoggle" id="langtoggle">
+      <button data-lang="fr">FR</button>
+      <button data-lang="en">EN</button>
     </div>
-    <p class="sub" id="sidebar-sub"></p>
-    <nav id="nav"></nav>
-  </aside>
+  </nav>
+  <div id="index" aria-hidden="true">
+    <div class="ix-top">
+      <input id="ix-q" class="ix-search" type="search" autocomplete="off">
+      <button class="ix-close" id="ix-close" aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <p class="ix-sub" id="sidebar-sub"></p>
+    <div id="ix-body"></div>
+  </div>
   <main>
-    <div class="head">
+    <div class="head" id="head">
       <div>
         <h2 id="title"></h2>
         <div id="source"></div>
       </div>
-      <span class="unit" id="unit"></span>
+      <div class="head-r">
+        <span class="unit" id="unit"></span>
+        <div class="stepper">
+          <button id="prev" aria-label="Previous"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+          <button id="next" aria-label="Next"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        </div>
+      </div>
     </div>
     <div id="definition">
       <h3 class="sec-hd" id="def-hd"></h3>
@@ -1080,6 +1223,7 @@ function D(){ return LANG==="en" ? DATA_EN : DATA_FR; }
 function T(){ return LANG==="en" ? TAXO_EN : TAXO_FR; }
 const NS = "http://www.w3.org/2000/svg";
 const M = {l:58, r:22, t:22, b:34}, W=960, H=440;
+let ANIM = false;
 const state = { id:null, view:"mission", gran:"M", source:"", transform:"level", compareId:null, compareMode:"overlay" };
 const CMP_COLOR = "#8b5cf6";
 
@@ -1092,6 +1236,11 @@ const UI = {
   navRecruiters: {fr:"Recrutement", en:"Recruiting"},
   navCorrelation: {fr:"Analyse de corrélation", en:"Correlation analysis"},
   navTheory: {fr:"Théorie du modèle", en:"Model theory"},
+  navIndex: {fr:"Indicateurs", en:"Indicators"},
+  searchPh: {fr:"Chercher un indicateur", en:"Search an indicator"},
+  closeTitle: {fr:"Fermer", en:"Close"},
+  prevTitle: {fr:"Indicateur précédent", en:"Previous indicator"},
+  nextTitle: {fr:"Indicateur suivant", en:"Next indicator"},
   definition: {fr:"Définition", en:"Definition"},
   csvSeries: {fr:"CSV série", en:"Series CSV"},
   csvSeriesTitle: {fr:"Télécharger cette série en CSV", en:"Download this series as CSV"},
@@ -1274,10 +1423,21 @@ function draw(){
   if(ymin<0&&ymax>0) add("line",{x1:M.l,x2:W-M.r,y1:Y(0),y2:Y(0),stroke:"var(--muted)","stroke-width":1});
 
   // lines
+  const animate=ANIM; ANIM=false;
+  if(series.length===1 && series[0].pts.length>1){
+    const s0=series[0], pl=s0.pts, base=H-M.b;
+    const defs=add("defs",{}); const g=document.createElementNS(NS,"linearGradient");
+    g.setAttribute("id","areaG"); g.setAttribute("x1","0"); g.setAttribute("x2","0"); g.setAttribute("y1","0"); g.setAttribute("y2","1");
+    [["0","0.22"],["1","0"]].forEach(([o,op])=>{ const st=document.createElementNS(NS,"stop"); st.setAttribute("offset",o); st.setAttribute("stop-color",s0.color); st.setAttribute("stop-opacity",op); g.appendChild(st); });
+    defs.appendChild(g);
+    const da=pl.map((p,i)=>(i?"L":"M")+X(p.t).toFixed(1)+" "+Y(p.v).toFixed(1)).join(" ")+" L"+X(pl[pl.length-1].t).toFixed(1)+" "+base+" L"+X(pl[0].t).toFixed(1)+" "+base+" Z";
+    add("path",{d:da,fill:"url(#areaG)",stroke:"none","class":animate?"dl-fade":""});
+  }
   for(const s of series){
     const d=s.pts.map((p,i)=>(i?"L":"M")+X(p.t).toFixed(1)+" "+Y(p.v).toFixed(1)).join(" ");
-    const at={d,fill:"none",stroke:s.color,"stroke-width":2,"stroke-linejoin":"round","stroke-linecap":"round"};
+    const at={d,fill:"none",stroke:s.color,"stroke-width":2.4,"stroke-linejoin":"round","stroke-linecap":"round"};
     if(s.dashed) at["stroke-dasharray"]="5 4";
+    else if(animate){ at.pathLength="1"; at["stroke-dasharray"]="1"; at["stroke-dashoffset"]="1"; at["class"]="dl-draw"; }
     add("path",at);
   }
   // hover layer
@@ -1390,56 +1550,81 @@ function exportSeries(){
   for(const k of keys) rows.push([k, ...m.lines.map(L=>L.points[k]??"")].map(csvEsc).join(","));
   download((state.id||"series")+".csv", rows.join("\n"));
 }
+const IX_ORDER = [];
 function buildNav(){
-  const nav=document.getElementById("nav"); nav.innerHTML="";
-  const mk=(id,labelKey,onclick)=>{ const b=document.createElement("button"); b.className="item home"; b.id=id;
-    b.innerHTML=`<span class="ilab">${t(labelKey)}</span>`; b.onclick=onclick; return b; };
-  nav.appendChild(mk("nav-home","navHome",()=>selectMission()));
-  nav.appendChild(mk("nav-supervisor","navSupervisor",()=>selectSupervisor()));
-  nav.appendChild(mk("nav-recruiters","navRecruiters",()=>selectRecruiters()));
-  nav.appendChild(mk("nav-correlation","navCorrelation",()=>selectCorrelation()));
-  nav.appendChild(mk("nav-theory","navTheory",()=>selectTheory()));
-  // Sections du dispositif informationnel : uniquement les donnees disponibles
+  const dock=document.getElementById("dock-items"); dock.innerHTML="";
+  const add=(id,cls,label,fn,title)=>{ const b=document.createElement("button"); b.id=id; if(cls) b.className=cls;
+    b.textContent=label; if(title) b.title=title; b.onclick=fn; dock.appendChild(b); };
+  add("nav-home","mark","Data Lab.",()=>selectMission(),t("navHome"));
+  add("nav-index","",t("navIndex"),()=>openIndex());
+  add("nav-correlation","",t("navCorrelation"),()=>selectCorrelation());
+  add("nav-theory","",t("navTheory"),()=>selectTheory());
+  add("nav-supervisor","",t("navSupervisor"),()=>selectSupervisor());
+  add("nav-recruiters","",t("navRecruiters"),()=>selectRecruiters());
+  const body=document.getElementById("ix-body"); body.innerHTML=""; IX_ORDER.length=0; let n=0;
   for(const sec of T()){
-    const wrap=document.createElement("div"); wrap.className="section";
-    const hd=document.createElement("button"); hd.className="section-hd";
-    hd.innerHTML=`<span class="chev">▼</span><span>${sec.section}</span>`;
-    hd.onclick=()=>wrap.classList.toggle("collapsed");
-    const body=document.createElement("div"); body.className="section-body";
-    const seen=new Set();
+    const seen=new Set(), items=[];
     for(const topic of sec.topics){
       if(!(topic.ids && topic.ids.length)) continue;
-      for(const id of topic.ids){
-        if(seen.has(id)) continue; seen.add(id);
-        const b=document.createElement("button"); b.className="item"; b.dataset.id=id;
-        b.innerHTML=`<span class="dotstat on"></span><span class="ilab">${D()[id].name}</span>`;
-        b.onclick=()=>selectSeries(id, topic.source);
-        body.appendChild(b);
-      }
+      for(const id of topic.ids){ if(seen.has(id)) continue; seen.add(id); items.push([id,topic.source]); }
     }
-    if(body.children.length){ wrap.appendChild(hd); wrap.appendChild(body); nav.appendChild(wrap); }
+    if(!items.length) continue;
+    const wrap=document.createElement("section"); wrap.className="ix-sec";
+    const h=document.createElement("h3"); h.textContent=sec.section; wrap.appendChild(h);
+    const list=document.createElement("div"); list.className="ix-list";
+    for(const [id,src] of items){
+      const el=document.createElement("button"); el.className="ix-item"; el.dataset.id=id;
+      el.style.setProperty("--i", n++); el.textContent=D()[id].name;
+      el.onclick=()=>selectSeries(id,src);
+      list.appendChild(el); IX_ORDER.push([id,src]);
+    }
+    wrap.appendChild(list); body.appendChild(wrap);
   }
+  filterIndex();
+}
+function filterIndex(){
+  const q=(document.getElementById("ix-q").value||"").trim().toLowerCase();
+  document.querySelectorAll("#ix-body .ix-item").forEach(el=>{ el.hidden = !!q && !el.textContent.toLowerCase().includes(q); });
+  document.querySelectorAll("#ix-body .ix-sec").forEach(sec=>{ sec.hidden = ![...sec.querySelectorAll(".ix-item")].some(el=>!el.hidden); });
+}
+function openIndex(){
+  const ix=document.getElementById("index"); ix.classList.add("open"); ix.setAttribute("aria-hidden","false");
+  document.body.classList.add("noscroll");
+  setTimeout(()=>document.getElementById("ix-q").focus({preventScroll:true}),60);
+}
+function closeIndex(){
+  const ix=document.getElementById("index"); if(!ix.classList.contains("open")) return;
+  ix.classList.remove("open"); ix.setAttribute("aria-hidden","true"); document.body.classList.remove("noscroll");
+  const q=document.getElementById("ix-q"); q.value=""; filterIndex();
+}
+function stepSeries(d){
+  if(!IX_ORDER.length) return;
+  let i=IX_ORDER.findIndex(x=>x[0]===state.id); if(i<0) i=0;
+  const [id,src]=IX_ORDER[(i+d+IX_ORDER.length)%IX_ORDER.length];
+  selectSeries(id,src);
 }
 function syncNav(){
-  document.querySelectorAll(".item[data-id]").forEach(b=>b.classList.toggle("active", b.dataset.id===state.id && state.view==="series"));
-  const map={mission:"nav-home", supervisor:"nav-supervisor", recruiters:"nav-recruiters", correlation:"nav-correlation", theory:"nav-theory"};
+  document.querySelectorAll("#ix-body .ix-item").forEach(b=>b.classList.toggle("active", b.dataset.id===state.id && state.view==="series"));
+  const map={mission:"nav-home", supervisor:"nav-supervisor", recruiters:"nav-recruiters", correlation:"nav-correlation", theory:"nav-theory", series:"nav-index"};
   for(const v in map){ const el=document.getElementById(map[v]); if(el) el.classList.toggle("active", state.view===v); }
 }
 function showView(view){   // "mission" | "supervisor" | "recruiters" | "correlation" | "theory" | "series"
+  closeIndex();
   document.getElementById("mission").style.display = view==="mission"?"block":"none";
   document.getElementById("supervisor").style.display = view==="supervisor"?"block":"none";
   document.getElementById("recruiters").style.display = view==="recruiters"?"block":"none";
   document.getElementById("correlation").style.display = view==="correlation"?"block":"none";
   document.getElementById("theory").style.display = view==="theory"?"block":"none";
-  for(const el of ["definition","controls","cmpbar","card","stats-hd","stats","statstable","ana-hd","analysis","foot"])
+  for(const el of ["head","definition","controls","cmpbar","card","stats-hd","stats","statstable","ana-hd","analysis","foot"])
     document.getElementById(el).style.display = view==="series"?"":"none";
+  window.scrollTo(0,0);
 }
 function clearHead(){
   document.getElementById("title").textContent="";
   document.getElementById("unit").textContent="";
   document.getElementById("source").textContent="";
 }
-function selectSeries(id, source){ state.id=id; state.source=source; state.view="series"; syncNav(); refresh(); }
+function selectSeries(id, source){ state.id=id; state.source=source; state.view="series"; ANIM=true; syncNav(); refresh(); }
 function selectMission(){ state.view="mission"; syncNav(); clearHead(); renderMission(); showView("mission"); }
 function selectSupervisor(){ state.view="supervisor"; syncNav(); clearHead(); renderSupervisor(); showView("supervisor"); }
 function selectRecruiters(){ state.view="recruiters"; syncNav(); clearHead(); renderRecruiters(); showView("recruiters"); }
@@ -1458,6 +1643,9 @@ function buildGran(){
 }
 function applyChromeText(){
   document.getElementById("sidebar-sub").textContent = t("sidebarSub");
+  const ixq=document.getElementById("ix-q"); if(ixq) ixq.placeholder=t("searchPh");
+  document.getElementById("ix-close").title=t("closeTitle");
+  document.getElementById("prev").title=t("prevTitle"); document.getElementById("next").title=t("nextTitle");
   document.getElementById("def-hd").textContent = t("definition");
   document.getElementById("exp-series").textContent = t("csvSeries");
   document.getElementById("exp-series").title = t("csvSeriesTitle");
@@ -1530,6 +1718,88 @@ function pageShell(kicker,title,lead,bodyHtml){
   return `<div class="m-kicker">${kicker}</div><h2 class="m-title">${title}</h2>`
        + (lead?`<p class="m-lead">${lead}</p>`:"") + bodyHtml;
 }
+/* ---------- hero : l'escalier du taux directeur ---------- */
+let HERO_PLAYED=false, heroRAF=0;
+function heroHtml(){
+  const fr=LANG!=="en";
+  return `<section class="hero">
+    <h1 class="hero-h">${fr?"Pourquoi <span class=\"nw\">Bank Al-Maghrib</span> bouge son taux.":"Why <span class=\"nw\">Bank Al-Maghrib</span> moves its rate."}</h1>
+    <div class="hero-fig"><span class="hero-num" id="hn">&nbsp;</span><span class="hero-cap"><b id="hd"></b><span id="hm"></span></span></div>
+    <div class="stairwrap" id="stairwrap">
+      <svg class="stair" viewBox="0 0 1000 300" preserveAspectRatio="none" role="img" aria-label="${fr?"Taux directeur de Bank Al-Maghrib depuis 2006":"Bank Al-Maghrib key rate since 2006"}">
+        <defs><clipPath id="stc"><rect id="strect" x="0" y="-10" width="0" height="320"/></clipPath>
+        <linearGradient id="stg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".16"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+        <g id="stgrid"></g>
+        <g clip-path="url(#stc)"><path id="starea" fill="url(#stg)" stroke="none"/><path id="stpath" fill="none" stroke="var(--ink)" stroke-width="2.6" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></g>
+      </svg>
+      <div class="stdots" id="stdots"></div>
+      <div class="stcur" id="stcur"></div>
+    </div>
+    <div class="stair-axis" id="staxis"></div>
+    <div class="hero-foot">
+      <div>
+        <p class="hero-note">${fr?"Chaque point est une décision du Conseil. Glissez le curseur sur le graphique pour remonter le temps.":"Each dot is a Council decision. Move across the chart to travel through time."}</p>
+        <div class="hero-key"><span><i></i>${fr?"Baisse":"Cut"}</span><span><i class="up"></i>${fr?"Hausse":"Hike"}</span></div>
+      </div>
+      <button class="m-cta" onclick="openIndex()">${fr?"Explorer les indicateurs":"Explore the indicators"}</button>
+    </div>
+  </section>`;
+}
+function initHero(){
+  const m=D().directeur; if(!m) return;
+  const fr=LANG!=="en", NB=String.fromCharCode(160);
+  const pts=m.lines[0].points, keys=Object.keys(pts).sort(), vals=keys.map(k=>pts[k]), n=keys.length;
+  const W=1000, H=300, lo=Math.min(...vals)-0.35, hi=Math.max(...vals)+0.35;
+  const X=i=>i/(n-1)*W, Y=v=>H-(v-lo)/(hi-lo)*H;
+  let d="M0 "+Y(vals[0]).toFixed(1); const moves=[];
+  for(let i=1;i<n;i++){ if(vals[i]!==vals[i-1]){ d+=" H"+X(i).toFixed(1)+" V"+Y(vals[i]).toFixed(1); moves.push(i); } }
+  d+=" H"+W;
+  document.getElementById("stpath").setAttribute("d",d);
+  document.getElementById("starea").setAttribute("d",d+" V"+H+" H0 Z");
+  let g="";
+  for(let v=Math.ceil(lo*2)/2; v<=hi; v+=0.5){ const y=Y(v).toFixed(1); g+=`<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>`; }
+  document.getElementById("stgrid").innerHTML=g;
+  const y0=+keys[0].slice(0,4), y1=+keys[n-1].slice(0,4); let ax="";
+  for(let y=Math.ceil(y0/4)*4; y<=y1; y+=4){ const i=keys.indexOf(y+"-01"); if(i<0) continue; ax+=`<span style="left:${(i/(n-1)*100).toFixed(2)}%">${y}</span>`; }
+  document.getElementById("staxis").innerHTML=ax;
+  document.getElementById("stdots").innerHTML=moves.map(i=>`<i class="mk ${vals[i]>vals[i-1]?"up":"dn"}" data-i="${i}" style="left:${(i/(n-1)*100).toFixed(2)}%;top:${(Y(vals[i])/H*100).toFixed(2)}%"></i>`).join("");
+  const numEl=document.getElementById("hn"), capB=document.getElementById("hd"), capS=document.getElementById("hm"), cur=document.getElementById("stcur");
+  const fmt2=v=>v.toLocaleString(locale(),{minimumFractionDigits:2,maximumFractionDigits:2})+NB+"%";
+  const mlab=k=>{ const [yy,mm]=k.split("-").map(Number); return MONTHS()[mm-1]+" "+yy; };
+  const lastDec=m.last_decision||(keys[n-1]+"-15");
+  const rest=()=>{
+    numEl.textContent=fmt2(vals[n-1]);
+    capB.textContent=fr?"Taux en vigueur":"Rate in force";
+    const dt=new Date(lastDec+"T12:00:00");
+    capS.textContent=(fr?"après la dernière décision du fichier, le ":"after the last decision in the file, on ")+dt.toLocaleDateString(locale(),{day:"numeric",month:"long",year:"numeric"}).split(" ").join(NB);
+    cur.classList.remove("on");
+  };
+  const show=i=>{
+    numEl.textContent=fmt2(vals[i]); capB.textContent=mlab(keys[i]);
+    const dv=i>0?Math.round((vals[i]-vals[i-1])*100):0;
+    capS.textContent = dv>0 ? (fr?"Hausse de ":"Hike of ")+dv+(fr?" pb":" bp") : dv<0 ? (fr?"Baisse de ":"Cut of ")+(-dv)+(fr?" pb":" bp") : (fr?"Taux inchangé":"Unchanged");
+    cur.style.left=(i/(n-1)*100)+"%"; cur.classList.add("on");
+  };
+  const dots=[...document.querySelectorAll("#stdots .mk")], rect=document.getElementById("strect");
+  const reduce=window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let busy=false; cancelAnimationFrame(heroRAF);
+  const finish=()=>{ rect.setAttribute("width",W); dots.forEach(x=>x.classList.add("on")); rest(); busy=false; };
+  if(HERO_PLAYED||reduce){ finish(); }
+  else {
+    HERO_PLAYED=true; busy=true; const T=2800, t0=performance.now();
+    const ease=p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+    const tick=now=>{
+      const p=Math.min(1,(now-t0)/T), e=ease(p), i=Math.min(n-1,Math.round(e*(n-1)));
+      rect.setAttribute("width",e*W); show(i);
+      dots.forEach(x=>x.classList.toggle("on",+x.dataset.i<=i));
+      if(p<1) heroRAF=requestAnimationFrame(tick); else finish();
+    };
+    heroRAF=requestAnimationFrame(tick);
+  }
+  const wrap=document.getElementById("stairwrap");
+  wrap.addEventListener("pointermove",ev=>{ if(busy) return; const r=wrap.getBoundingClientRect(); const f=Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width)); show(Math.round(f*(n-1))); });
+  wrap.addEventListener("pointerleave",()=>{ if(!busy) rest(); });
+}
 function renderMission(){
   const fr = LANG!=="en";
   const body = fr ? `
@@ -1545,7 +1815,7 @@ function renderMission(){
       <a class="m-doc" href="dispositif-informationnel-bam.pdf" target="_blank" rel="noopener">
         <span class="m-doc-ico">PDF</span>
         <span class="m-doc-txt"><b>Dispositif informationnel de Bank Al-Maghrib</b><span>Le document officiel qui recense les sources utilisées par BAM. Cliquez pour l'ouvrir ou le télécharger.</span></span>
-        <span class="m-doc-cta">Ouvrir ▸</span>
+        <span class="m-doc-cta">Ouvrir</span>
       </a>
       <div class="m-notes">
         <div class="m-notes-hd">Notes de méthode et limites</div>
@@ -1557,7 +1827,7 @@ function renderMission(){
           <li><b>Construit avec l'IA comme coach.</b> Ce site (recherche de sources, code, mise en forme) est réalisé avec l'aide de Claude, utilisé comme coach et facilitateur technique. Je n'aurais pas pu construire seul la partie technique. Les choix de fond, eux, restent les miens : quels inputs, quelles sources, quelles limites signaler.</li>
         </ul>
       </div>
-      <p class="m-hint">Choisis une donnée dans le menu de gauche pour voir sa définition, ses statistiques et l'analyse de ses mouvements.</p>` : `
+      <p class="m-hint">Ouvre l'index des indicateurs (bouton en bas) pour voir la définition, ses statistiques et l'analyse de ses mouvements.</p>` : `
       <div class="m-steps">
         <div class="m-step"><span class="m-num">01</span><b>Choose the inputs</b><p>Select the indicators that genuinely weigh on the decision: those that cause or anticipate inflation two years out, and the external channels that drive it in Morocco.</p></div>
         <div class="m-step"><span class="m-num">02</span><b>Source the data</b><p>Source every input from primary data. The scope follows Bank Al-Maghrib's <b>Information Framework</b>, the official document listing the sources the Bank uses to build its forecasts.</p></div>
@@ -1570,7 +1840,7 @@ function renderMission(){
       <a class="m-doc" href="dispositif-informationnel-bam.pdf" target="_blank" rel="noopener">
         <span class="m-doc-ico">PDF</span>
         <span class="m-doc-txt"><b>Bank Al-Maghrib's Information Framework</b><span>The official document listing the sources BAM uses. Click to open or download it.</span></span>
-        <span class="m-doc-cta">Open ▸</span>
+        <span class="m-doc-cta">Open</span>
       </a>
       <div class="m-notes">
         <div class="m-notes-hd">Method notes and limitations</div>
@@ -1582,12 +1852,13 @@ function renderMission(){
           <li><b>Built with AI as a coach.</b> This site (sourcing, code, formatting) is made with the help of Claude, used as a coach and technical facilitator. I could not have built the technical side on my own. The substantive choices remain mine: which inputs, which sources, which limitations to flag.</li>
         </ul>
       </div>
-      <p class="m-hint">Pick a series from the left-hand menu to see its definition, statistics and the analysis of its moves.</p>`;
-  document.getElementById("mission").innerHTML = pageShell(
+      <p class="m-hint">Open the indicators index (button below) to see its definition, statistics and the analysis of its moves.</p>`;
+  document.getElementById("mission").innerHTML = heroHtml() + '<div class="m-rest">' + pageShell(
     fr?"L'exercice":"The exercise",
     fr?"Les inputs de la décision de politique monétaire de Bank Al-Maghrib":"The inputs behind Bank Al-Maghrib's monetary policy decision",
     fr?"Construire la base de données qui alimente un modèle d'anticipation des décisions de taux de BAM (hausse, baisse ou statu quo). Trois étapes.":"Building the database that feeds a model anticipating BAM's rate decisions (hike, cut or hold). Three steps.",
-    body);
+    body) + '</div>';
+  initHero();
 }
 function renderSupervisor(){
   const fr = LANG!=="en";
@@ -1602,7 +1873,7 @@ function renderSupervisor(){
         <div class="m-step"><span class="m-num">2</span><b>Comment j'ai procédé</b><p>Le périmètre suit le Dispositif informationnel de BAM ligne par ligne. Chaque série est sourcée directement (HCP, BAM, Office des Changes, TGR, FRED, FMI), jamais via un agrégateur. Le choix des inputs et leur justification sont miens ; l'IA m'a aidé à trouver, extraire et coder les données.</p></div>
         <div class="m-step"><span class="m-num">3</span><b>Ce qui reste ouvert</b><p>Trois points sont signalés explicitement sur la page « La démarche » : la reconstruction de l'output gap, le choix des inputs encore à consolider, et le sourcing primaire. Je veux en discuter avec vous.</p></div>
       </div>
-      <a class="m-cta" href="#" onclick="selectMission();return false;">Ouvrir la page « La démarche » ▸</a>
+      <a class="m-cta" href="#" onclick="selectMission();return false;">Ouvrir la page « La démarche »</a>
       <div class="m-notes">
         <div class="m-notes-hd">Ce que je cherche comme retour</div>
         <ul>
@@ -1611,7 +1882,7 @@ function renderSupervisor(){
           <li><b>Sur la suite.</b> La prochaine étape est de construire le modèle d'anticipation proprement dit sur cette base de données. Je suis preneur d'un cadrage sur la priorité entre rigueur statistique et lisibilité opérationnelle.</li>
         </ul>
       </div>
-      <p class="m-hint">Toutes les séries, définitions et sources sont accessibles dans le menu de gauche.</p>` : `
+      <p class="m-hint">Toutes les séries, définitions et sources sont accessibles depuis l'index des indicateurs, en bas de page.</p>` : `
       <div class="m-source">
         <div class="m-source-hd">Context</div>
         <p>This Data Lab is the deliverable for the exercise assigned to me on the Rates desk at BMCE Capital Markets: "choose the inputs behind Bank Al-Maghrib's monetary policy decision." It documents every step, from raw data to analysis, so the reasoning can be checked end to end.</p>
@@ -1622,7 +1893,7 @@ function renderSupervisor(){
         <div class="m-step"><span class="m-num">2</span><b>How I went about it</b><p>The scope follows BAM's Information Framework line by line. Every series is sourced directly (HCP, BAM, Office des Changes, TGR, FRED, IMF), never through an aggregator. The choice of inputs and their justification are mine; the AI helped me find, extract and code the data.</p></div>
         <div class="m-step"><span class="m-num">3</span><b>What is still open</b><p>Three points are flagged explicitly on the "Approach" page: the output-gap reconstruction, the input selection still being consolidated, and primary sourcing. I want to discuss these with you.</p></div>
       </div>
-      <a class="m-cta" href="#" onclick="selectMission();return false;">Open the "Approach" page ▸</a>
+      <a class="m-cta" href="#" onclick="selectMission();return false;">Open the "Approach" page</a>
       <div class="m-notes">
         <div class="m-notes-hd">The feedback I am looking for</div>
         <ul>
@@ -1631,7 +1902,7 @@ function renderSupervisor(){
           <li><b>On next steps.</b> The next stage is building the actual anticipation model on top of this database. I would welcome guidance on prioritising statistical rigour versus operational readability.</li>
         </ul>
       </div>
-      <p class="m-hint">Every series, definition and source is available in the left-hand menu.</p>`;
+      <p class="m-hint">Every series, definition and source is available from the indicators index at the bottom of the page.</p>`;
   document.getElementById("supervisor").innerHTML = pageShell(
     fr?"POUR MON MAÎTRE DE STAGE":"FOR MY SUPERVISOR",
     fr?"Le livrable de l'exercice « inputs de la décision BAM »":"The deliverable for the “BAM decision inputs” exercise",
@@ -1655,7 +1926,7 @@ function renderRecruiters(){
         <div class="m-step"><span class="m-num">3</span><b>Honnêteté sur les limites</b><p>Chaque série a une définition complète et, quand c'est pertinent, ses limites explicitement signalées. Idem pour la méthode : ce qui est solide, ce qui reste à consolider.</p></div>
       </div>
       <div class="m-badges">${badges}</div>
-      <a class="m-cta" href="#" onclick="selectMission();return false;">Explorer les données ▸</a>
+      <a class="m-cta" href="#" onclick="selectMission();return false;">Explorer les données</a>
       <div class="m-notes">
         <div class="m-notes-hd">À propos</div>
         <ul>
@@ -1674,7 +1945,7 @@ function renderRecruiters(){
         <div class="m-step"><span class="m-num">3</span><b>Honesty about limits</b><p>Every series carries a complete definition and, where relevant, its limitations flagged explicitly. Same for the method: what is solid, what is still a work in progress.</p></div>
       </div>
       <div class="m-badges">${badges}</div>
-      <a class="m-cta" href="#" onclick="selectMission();return false;">Explore the data ▸</a>
+      <a class="m-cta" href="#" onclick="selectMission();return false;">Explore the data</a>
       <div class="m-notes">
         <div class="m-notes-hd">About</div>
         <ul>
@@ -1819,6 +2090,18 @@ document.getElementById("langtoggle").addEventListener("click",e=>{
   if(b.dataset.lang!==LANG) setLang(b.dataset.lang);
 });
 
+document.getElementById("ix-close").addEventListener("click",closeIndex);
+document.getElementById("ix-q").addEventListener("input",filterIndex);
+document.getElementById("ix-q").addEventListener("keydown",e=>{ if(e.key==="Enter"){ const f=document.querySelector("#ix-body .ix-item:not([hidden])"); if(f) f.click(); } });
+document.getElementById("prev").addEventListener("click",()=>stepSeries(-1));
+document.getElementById("next").addEventListener("click",()=>stepSeries(1));
+document.addEventListener("keydown",e=>{
+  const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
+  const open=document.getElementById("index").classList.contains("open");
+  if(e.key==="Escape") closeIndex();
+  else if(e.key==="/" && !typing){ e.preventDefault(); openIndex(); }
+  else if(!typing && !open && state.view==="series"){ if(e.key==="ArrowRight") stepSeries(1); else if(e.key==="ArrowLeft") stepSeries(-1); }
+});
 applyChromeText();
 buildNav(); selectMission();   // on ouvre sur la page "La démarche"
 </script>
@@ -1985,6 +2268,11 @@ def translate_taxonomy(taxo):
                             "ids": t["ids"]})
         out.append({"section": SECTION_EN.get(sec["section"], sec["section"]), "topics": topics})
     return out
+
+
+def _last_decision_date():
+    import csv as _c
+    return [r["date"] for r in _c.DictReader(open(DECISIONS_FILE, encoding="utf-8"))][-1]
 
 
 def decision_counts():
